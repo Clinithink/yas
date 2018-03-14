@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2017 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -77,14 +77,14 @@ struct serializer<
             __YAS_CONSTEXPR_IF ( !(F & yas::compacted) ) {
                 json_skipws(ar);
             }
-            YAS_THROW_IF_BAD_JSON_CHARS(ar, "{");
+            __YAS_THROW_IF_BAD_JSON_CHARS(ar, "{");
 
             apply(ar, o.map, o.pairs);
 
             __YAS_CONSTEXPR_IF ( !(F & yas::compacted) ) {
                 json_skipws(ar);
             }
-            YAS_THROW_IF_BAD_JSON_CHARS(ar, "}");
+            __YAS_THROW_IF_BAD_JSON_CHARS(ar, "}");
         } else {
             apply(ar, o.map, o.pairs);
         }
@@ -121,7 +121,7 @@ private:
             if ( ch == '}' ) {
                 return ar;
             } else {
-                YAS_THROW_IF_BAD_JSON_CHARS(ar, ",");
+                __YAS_THROW_IF_BAD_JSON_CHARS(ar, ",");
                 json_skipws(ar);
                 json_skip_object(ar);
                 ar.ungetch('}');
@@ -160,14 +160,14 @@ private:
                             return ar;
                         }
 
-                        YAS_THROW_IF_BAD_JSON_CHARS(ar, ",");
+                        __YAS_THROW_IF_BAD_JSON_CHARS(ar, ",");
                     }
                 }
             }
             __YAS_CONSTEXPR_IF ( I+1 < sizeof...(Tp) ) {
                 json_skipws(ar);
 
-                YAS_THROW_IF_BAD_JSON_CHARS(ar, ",");
+                __YAS_THROW_IF_BAD_JSON_CHARS(ar, ",");
             }
         } else {
             ar & std::get<I>(t);

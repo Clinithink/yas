@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2017 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -43,6 +43,11 @@ namespace detail {
 
 /***************************************************************************/
 
+#ifdef _MSC_VER
+#   pragma warning(push)
+#   pragma warning(disable:4307)
+#endif
+
 constexpr std::uint32_t fnv1a(std::nullptr_t) { return 0; }
 
 #if __cplusplus >= 201402L
@@ -64,6 +69,10 @@ constexpr std::uint32_t fnv1a(const CharT *s, std::uint32_t h = 0x811c9dc5) {
     return (*s == 0) ? h : fnv1a(s+1, ((h ^ (*s)) * 0x01000193));
 }
 
+#endif
+
+#ifdef _MSC_VER
+#   pragma warning(pop)
 #endif
 
 /***************************************************************************/

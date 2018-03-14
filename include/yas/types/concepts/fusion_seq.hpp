@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2017 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -111,7 +111,7 @@ apply(Archive &ar, Cont<Tp...> &t) {
     }
 
     if ((F & yas::json) && I + 1 < sizeof...(Tp)) {
-        YAS_THROW_IF_BAD_JSON_CHARS(ar, ",");
+        __YAS_THROW_IF_BAD_JSON_CHARS(ar, ",");
     }
 
     return apply<F, I + 1>(ar, t);
@@ -120,11 +120,14 @@ apply(Archive &ar, Cont<Tp...> &t) {
 /***************************************************************************/
 
 template<
-        std::size_t F, typename Archive, template<typename...> class Cont, typename... Types
+     std::size_t F
+    ,typename Archive
+    ,template<typename...> class Cont
+    ,typename... Types
 >
 Archive &save(Archive &ar, const Cont<Types...> &cont) {
     if ( F & options::binary ) {
-        ar.write(YAS_SCAST(std::uint8_t, sizeof...(Types)));
+        ar.write(__YAS_SCAST(std::uint8_t, sizeof...(Types)));
     } else if ( F & yas::text ) {
         ar.write(sizeof...(Types));
     }
@@ -139,24 +142,27 @@ Archive &save(Archive &ar, const Cont<Types...> &cont) {
 };
 
 template<
-        std::size_t F, typename Archive, template<typename...> class Cont, typename... Types
+     std::size_t F
+    ,typename Archive
+    ,template<typename...> class Cont
+    ,typename... Types
 >
 Archive &load(Archive &ar, Cont<Types...> &cont) {
     if ( F & options::binary ) {
         std::uint8_t size = 0;
         ar.read(size);
-        if ( size != sizeof...(Types)) { YAS_THROW_BAD_SIZE_ON_DESERIALIZE("fusion::container"); }
+        if ( size != sizeof...(Types)) { __YAS_THROW_BAD_SIZE_ON_DESERIALIZE("fusion::container"); }
     } else if ( F & yas::text ) {
         std::uint32_t size = 0;
         ar.read(size);
-        if ( size != sizeof...(Types)) { YAS_THROW_BAD_SIZE_ON_DESERIALIZE("fusion::container"); }
+        if ( size != sizeof...(Types)) { __YAS_THROW_BAD_SIZE_ON_DESERIALIZE("fusion::container"); }
     }
 
-    if ( F & yas::json ) { YAS_THROW_IF_BAD_JSON_CHARS(ar, "["); }
+    if ( F & yas::json ) { __YAS_THROW_IF_BAD_JSON_CHARS(ar, "["); }
 
     apply<F>(ar, cont);
 
-    if ( F & yas::json ) { YAS_THROW_IF_BAD_JSON_CHARS(ar, "]"); }
+    if ( F & yas::json ) { __YAS_THROW_IF_BAD_JSON_CHARS(ar, "]"); }
 
     return ar;
 };

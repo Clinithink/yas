@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2017 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -50,7 +50,7 @@ bool boost_variant_test(std::ostream &log, const char *archive_type, const char 
         typename archive_traits::iarchive ia;
         archive_traits::icreate(ia, oa, archive_type);
         ia & YAS_OBJECT_NVP("obj", ("variant", v1));
-        if ( v0 != v1 ) {
+        if ( !(v0 == v1) ) {
             YAS_TEST_REPORT(log, archive_type, test_name);
             return false;
         }
@@ -65,7 +65,7 @@ bool boost_variant_test(std::ostream &log, const char *archive_type, const char 
         typename archive_traits::iarchive ia;
         archive_traits::icreate(ia, oa, archive_type);
         ia & YAS_OBJECT_NVP("obj", ("variant", v1));
-        if ( v0 != v1 ) {
+        if ( !(v0 == v1) ) {
             YAS_TEST_REPORT(log, archive_type, test_name);
             return false;
         }
@@ -80,7 +80,7 @@ bool boost_variant_test(std::ostream &log, const char *archive_type, const char 
         typename archive_traits::iarchive ia;
         archive_traits::icreate(ia, oa, archive_type);
         ia & YAS_OBJECT_NVP("obj", ("variant", v1));
-        if ( v0 != v1 ) {
+        if ( !(v0 == v1) ) {
             YAS_TEST_REPORT(log, archive_type, test_name);
             return false;
         }

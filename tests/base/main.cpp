@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2017 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -44,7 +44,8 @@
 #include <yas/json_iarchive.hpp>
 #include <yas/std_types.hpp>
 #include <yas/serialize.hpp>
-#include <yas/tools/hexdumper.hpp>
+#include <yas/tools/archinfo.hpp>
+#include <yas/tools/hexdump.hpp>
 
 #ifdef YAS_SERIALIZE_BOOST_TYPES
 #include <yas/boost_types.hpp>
@@ -184,10 +185,11 @@ struct archive_traits {
         static constexpr yas::options host_endian() { return oarchive_type::host_endian(); }
         std::size_t size() const { return stream.get_intrusive_buffer().size; }
         yas::intrusive_buffer get_intrusive_buffer() const { return stream.get_intrusive_buffer(); }
+        yas::shared_buffer get_shared_buffer() const { return stream.get_shared_buffer(); }
 
         void dump(std::ostream &os = std::cout) {
             const yas::intrusive_buffer buf = stream.get_intrusive_buffer();
-            os << yas::hex_dump(buf.data, buf.size) << std::endl;
+            os << yas::hexdump(buf.data, buf.size) << std::endl;
         }
         void print(std::ostream &os = std::cout) {
             const yas::intrusive_buffer buf = stream.get_intrusive_buffer();
@@ -249,7 +251,7 @@ struct archive_traits {
 
         void dump(std::ostream &os = std::cout) {
             const yas::intrusive_buffer buf = stream->get_intrusive_buffer();
-            os << yas::hex_dump(buf.data, buf.size) << std::endl;
+            os << yas::hexdump(buf.data, buf.size) << std::endl;
         }
         void print(std::ostream &os = std::cout) {
             const yas::intrusive_buffer buf = stream->get_intrusive_buffer();
@@ -413,20 +415,20 @@ struct options {
 
         int artype = binary+text+json;
         if ( artype == 0 ) {
-            msg = "one of binary/text/object should be specified. terminate.";
+            msg = "one of binary/text/json should be specified. terminate.";
 
             return;
         }
         if ( artype > 1 ) {
-            msg = "only one of binary/text/object can be specified. terminate.";
+            msg = "only one of binary/text/json can be specified. terminate.";
 
             return;
         }
 
         if ( binary ) {
             if ( !endian_big && !endian_little ) {
-                endian_big = YAS_BIG_ENDIAN;
-                endian_little = YAS_LITTLE_ENDIAN;
+                endian_big = __YAS_BIG_ENDIAN;
+                endian_little = __YAS_LITTLE_ENDIAN;
             }
             if ( endian_big && endian_little ) {
                 msg = "only one of big/little can be specified. terminate.";
@@ -472,6 +474,14 @@ int main(int, char **argv) {
         return EXIT_FAILURE;
     }
 
+    std::cout << std::endl
+    << "/***************************************************/" << std::endl
+    << "cmdline: ";
+    for ( char **arg = argv+1; *arg; ++arg ) {
+        std::cout << *arg << ' ';
+    }
+    std::cout << std::endl << std::endl;
+
     std::ofstream logfile;
     if ( opts.logn == options::log_file ) {
         const char *fname = std::strrchr(argv[0], '/');
@@ -481,7 +491,7 @@ int main(int, char **argv) {
         assert(logfile.good());
     }
 
-    auto &log = YAS_SCAST(std::ostream &, (
+    auto &log = __YAS_SCAST(std::ostream &, (
         opts.logn == options::log_stdout
             ? std::cout
             : opts.logn == options::log_stderr
@@ -558,7 +568,7 @@ int main(int, char **argv) {
     << "/***************************************************/" << std::endl
     << "> passed tests: " << passed << std::endl
     << "> failed tests: " << failed << std::endl
-    << "> host endian : " << (YAS_LITTLE_ENDIAN ? "little" : "big") << std::endl
+    << "> host endian : " << (__YAS_LITTLE_ENDIAN ? "little" : "big") << std::endl
     << "> host bits   : " << sizeof(void *)*8 << std::endl
     << "> YAS version : " << YAS_VERSION_STRING << std::endl
     << "/***************************************************/"

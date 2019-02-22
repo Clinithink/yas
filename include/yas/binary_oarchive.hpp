@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -98,6 +98,12 @@ struct binary_oarchive
     this_type& operator()(const Args&... args) {
         return serialize(args...);
     }
+
+    template<typename... Args>
+    this_type& save(const Args&... args) {
+        return serialize(args...);
+    }
+
 };
 
 /***************************************************************************/

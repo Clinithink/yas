@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -48,15 +48,15 @@ namespace detail {
 
 /***************************************************************************/
 
-template<std::size_t F, typename KT, typename VT>
+template<std::size_t F, typename T>
 struct serializer<
 	type_prop::not_a_fundamental,
-	ser_method::use_internal_serializer,
+	ser_case::use_internal_serializer,
 	F,
-    value<KT, VT>
+    value<T>
 > {
 	template<typename Archive>
-	static Archive& save(Archive& ar, const value<KT, VT> &v) {
+	static Archive& save(Archive& ar, const value<T> &v) {
 		__YAS_CONSTEXPR_IF ( F & yas::json ) {
             ar.write("\"", 1);
             ar.write(v.key, v.klen);
@@ -67,7 +67,7 @@ struct serializer<
 	}
 
 	template<typename Archive>
-	static Archive& load(Archive& ar, value<KT, VT> &v) {
+	static Archive& load(Archive& ar, value<T> &v) {
 		__YAS_CONSTEXPR_IF ( F & yas::json ) {
 			__YAS_CONSTEXPR_IF ( F & yas::compacted ) {
                 __YAS_THROW_IF_BAD_JSON_CHARS(ar, "\"");

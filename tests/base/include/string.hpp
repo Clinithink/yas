@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -59,6 +59,22 @@ bool string_test(std::ostream &log, const char *archive_type, const char *test_n
         typename archive_traits::oarchive oa;
         archive_traits::ocreate(oa, archive_type);
         std::string s, ss;
+        oa & YAS_OBJECT_NVP("obj", ("s", s));
+
+        typename archive_traits::iarchive ia;
+        archive_traits::icreate(ia, oa, archive_type);
+        ia & YAS_OBJECT_NVP("obj", ("s", ss));
+
+        if ( !ss.empty() && ss != s ) {
+            YAS_TEST_REPORT(log, archive_type, test_name);
+            return false;
+        }
+    }
+
+    if ( archive_traits::oarchive_type::flags() & yas::json ) {
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
+        std::string s("some \n string"), ss;
         oa & YAS_OBJECT_NVP("obj", ("s", s));
 
         typename archive_traits::iarchive ia;

@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -46,7 +46,7 @@ namespace detail {
 template<std::size_t F, typename T>
 struct serializer <
 	 type_prop::not_a_fundamental,
-	 ser_method::has_split_functions,
+	 ser_case::has_split_functions,
 	 F,
 	 T
 > {
@@ -68,7 +68,7 @@ struct serializer <
 template<std::size_t F, typename T>
 struct serializer <
 	 type_prop::not_a_fundamental,
-	 ser_method::has_one_function,
+	 ser_case::has_one_function,
 	 F,
 	 T
 > {
@@ -92,7 +92,7 @@ struct serializer <
 template<std::size_t F, typename T>
 struct serializer<
 	 type_prop::not_a_fundamental,
-	 ser_method::has_one_method,
+	 ser_case::has_one_memfn,
 	 F,
 	 T
 > {
@@ -114,7 +114,7 @@ struct serializer<
 template<std::size_t F, typename T>
 struct serializer<
 	 type_prop::not_a_fundamental,
-	 ser_method::has_split_methods,
+	 ser_case::has_split_memfns,
 	 F,
 	 T
 > {

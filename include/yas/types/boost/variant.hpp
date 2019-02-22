@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -39,20 +39,85 @@
 #if defined(YAS_SERIALIZE_BOOST_TYPES)
 #include <yas/detail/type_traits/type_traits.hpp>
 #include <yas/detail/type_traits/serializer.hpp>
+#include <yas/detail/preprocessor/preprocessor.hpp>
 
+#include <boost/mpl/at.hpp>
 #include <boost/variant.hpp>
-
-#include <yas/detail/tools/variant_element_switch.hpp>
 
 namespace yas {
 namespace detail {
 
 /***************************************************************************/
 
+#define __YAS_GENERATE_BOOST_VARIANT_SWITCH_CB(unused, i, n) \
+    case i: { \
+        using elem_t = typename boost::mpl::at_c< \
+             typename boost::variant<YAS_PP_ENUM_PARAMS(n, T)>::types \
+            ,i \
+        >::type; \
+        \
+        __YAS_CONSTEXPR_IF ( yas::is_writable_archive<Archive>::value ) { \
+            elem_t &elem = boost::get<elem_t>(v); \
+            __YAS_CONSTEXPR_IF ( F & yas::json ) { \
+                ar & YAS_OBJECT(nullptr, elem); \
+            } else { \
+                ar & elem; \
+            } \
+        } else { \
+            elem_t elem = elem_t(); \
+            __YAS_CONSTEXPR_IF ( F & yas::json ) { \
+                ar & YAS_OBJECT(nullptr, elem); \
+            } else { \
+                ar & elem; \
+            } \
+            \
+            v = boost::move(elem); \
+        } \
+        \
+        return; \
+    };
+
+#define __YAS_GENERATE_BOOST_VARIANT_SWITCH_FOR_ZERO(n)
+
+#define __YAS_GENERATE_BOOST_VARIANT_SWITCH_FOR_NONZERO(n) \
+    template<std::size_t F, typename Archive, YAS_PP_ENUM_PARAMS(n, typename T)> \
+    void boost_variant_switch(Archive &ar, std::size_t idx, boost::variant<YAS_PP_ENUM_PARAMS(n, T)> &v) { \
+        switch ( idx ) { \
+            YAS_PP_REPEAT( \
+                 n \
+                ,__YAS_GENERATE_BOOST_VARIANT_SWITCH_CB \
+                ,n \
+            ) \
+            default: return; \
+        } \
+    }
+
+
+#define __YAS_GENERATE_BOOST_VARIANT_SWITCH(unused, n, unused2) \
+    YAS_PP_IF( \
+         YAS_PP_EQUAL(n, 0) \
+        ,__YAS_GENERATE_BOOST_VARIANT_SWITCH_FOR_ZERO \
+        ,__YAS_GENERATE_BOOST_VARIANT_SWITCH_FOR_NONZERO \
+    )(n)
+
+YAS_PP_REPEAT( \
+     YAS_VARIANT_MAX_VARIANTS \
+    ,__YAS_GENERATE_BOOST_VARIANT_SWITCH \
+    ,~ \
+)
+
+#undef __YAS_GENERATE_BOOST_VARIANT_SWITCH_CB
+#undef __YAS_GENERATE_BOOST_VARIANT_SWITCH_FOR_ZERO
+#undef __YAS_GENERATE_BOOST_VARIANT_SWITCH_FOR_NONZERO
+#undef __YAS_GENERATE_BOOST_VARIANT_SWITCH
+
+
+/***************************************************************************/
+
 template<std::size_t F, typename... Types>
 struct serializer<
     type_prop::not_a_fundamental,
-    ser_method::use_internal_serializer,
+    ser_case::use_internal_serializer,
     F,
     boost::variant<Types...>
 > {
@@ -63,11 +128,11 @@ struct serializer<
             ar.write("[", 1);
             ar & YAS_OBJECT(nullptr, idx);
             ar.write(",", 1);
-            variant_switch<F>(ar, idx, __YAS_CCAST(boost::variant<Types...> &, v));
+            boost_variant_switch<F>(ar, idx, __YAS_CCAST(boost::variant<Types...> &, v));
             ar.write("]", 1);
         } else {
             ar.write(__YAS_SCAST(std::uint8_t, idx));
-            variant_switch<F>(ar, idx, __YAS_CCAST(boost::variant<Types...> &, v));
+            boost_variant_switch<F>(ar, idx, __YAS_CCAST(boost::variant<Types...> &, v));
         }
 
         return ar;
@@ -86,7 +151,7 @@ struct serializer<
                 json_skipws(ar);
             }
             __YAS_THROW_IF_BAD_JSON_CHARS(ar, ",");
-            variant_switch<F>(ar, idx, v);
+            boost_variant_switch<F>(ar, idx, v);
             __YAS_CONSTEXPR_IF ( !(F & yas::compacted) ) {
                 json_skipws(ar);
             }
@@ -94,7 +159,7 @@ struct serializer<
         } else {
             std::uint8_t idx = 0;
             ar & idx;
-            variant_switch<F>(ar, idx, v);
+            boost_variant_switch<F>(ar, idx, v);
         }
 
         return ar;

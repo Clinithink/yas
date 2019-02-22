@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -36,150 +36,130 @@
 #ifndef __yas__tests__base__include__serialize_hpp
 #define __yas__tests__base__include__serialize_hpp
 
+#include <fstream>
+#include <yas/serialize.hpp>
+
 template<typename archive_traits>
 bool serialize_test(std::ostream &log, const char *archive_type, const char *test_name) {
-    bool b = true, b2{};
-    std::int8_t c = '1', c2{};
-    std::uint8_t uc = '2', uc2{};
-    std::int16_t s = 3, s2{};
-    std::uint16_t us = 4, us2{};
-    std::int32_t i = 5, i2{};
-    std::uint32_t l = 6, l2{};
-    std::int64_t i64 = 7, i642{};
-    std::uint64_t u64 = 8, u642{};
-
-    std::int64_t i64max = std::numeric_limits<std::int64_t>::max(), i64max2{};
-    std::uint64_t u64max = std::numeric_limits<std::uint64_t>::max(), u64max2{};
-
-    float f = 3.14f, f2{};
-    double d = 3.14, d2{};
+    const int i=33;
+    int i2{};
+    const double d = 3.14;
+    double d2{};
+    const std::string s = "some string";
+    std::string s2{};
 
     const auto o0 = YAS_OBJECT_NVP(
          "obj"
-        ,("b", b)
-        ,("c", c)
-        ,("uc", uc)
-        ,("s", s)
-        ,("us", us)
         ,("i", i)
-        ,("l", l)
-        ,("i64", i64)
-        ,("u64", u64)
-        ,("f", f)
         ,("d", d)
-        ,("i64max", i64max)
-        ,("u64max", u64max)
+        ,("s", s)
     );
 
     {
-        const auto buf = yas::save<yas::mem|yas::binary>(o0);
-        yas::load<yas::mem|yas::binary>(
-             buf
-            ,YAS_OBJECT_NVP(
-                 "obj"
-                ,("b", b2)
-                ,("c", c2)
-                ,("uc", uc2)
-                ,("s", s2)
-                ,("us", us2)
-                ,("i", i2)
-                ,("l", l2)
-                ,("i64", i642)
-                ,("u64", u642)
-                ,("f", f2)
-                ,("d", d2)
-                ,("i64max", i64max2)
-                ,("u64max", u64max2)
-            )
-        );
-        if ( b!=b2||c!=c2||uc!=uc2||s!=s2||us!=us2||i!=i2||l!=l2||i64!=i642||u64!=u642||f!=f2||d!=d2||i64max!=i64max2||u64max!=u64max2 ) {
-            YAS_TEST_REPORT(log, archive_type, test_name);
-            return false;
-        }
-    }
-    b2=0;c2=0;uc2=0;s2=0;us2=0;i2=0;l2=0;i642=0;u642=0;i64max2=0;u64max2=0;f2=0;d2=0;
-    {
-        const auto buf = yas::save<yas::mem|yas::text>(o0);
-        yas::load<yas::mem|yas::text>(
+        // mem
+
+        i2 = 0;
+        d2 = 0;
+        s2.clear();
+
+        const auto buf = yas::save<yas::mem|yas::json>(o0);
+        yas::load<yas::mem|yas::json>(
              buf
             ,YAS_OBJECT_NVP(
                 "obj"
-                ,("b", b2)
-                ,("c", c2)
-                ,("uc", uc2)
-                ,("s", s2)
-                ,("us", us2)
                 ,("i", i2)
-                ,("l", l2)
-                ,("i64", i642)
-                ,("u64", u642)
-                ,("f", f2)
                 ,("d", d2)
-                ,("i64max", i64max2)
-                ,("u64max", u64max2)
+                ,("s", s2)
             )
         );
-        if ( b!=b2||c!=c2||uc!=uc2||s!=s2||us!=us2||i!=i2||l!=l2||i64!=i642||u64!=u642||f!=f2||d!=d2||i64max!=i64max2||u64max!=u64max2 ) {
+        if ( i != i2 || d != d2 || s != s2 ) {
             YAS_TEST_REPORT(log, archive_type, test_name);
             return false;
         }
     }
-    b2=0;c2=0;uc2=0;s2=0;us2=0;i2=0;l2=0;i642=0;u642=0;i64max2=0;u64max2=0;f2=0;d2=0;
+
     {
+        // file name
+
+        i2 = 0;
+        d2 = 0;
+        s2.clear();
+
         const char *fname = "file.bin";
         std::remove(fname);
 
-        yas::save<yas::file|yas::binary>(fname, o0);
-        yas::load<yas::file|yas::binary>(
+        yas::save<yas::file|yas::json>(fname, o0);
+        yas::load<yas::file|yas::json>(
              fname
             ,YAS_OBJECT_NVP(
                 "obj"
-                ,("b", b2)
-                ,("c", c2)
-                ,("uc", uc2)
-                ,("s", s2)
-                ,("us", us2)
                 ,("i", i2)
-                ,("l", l2)
-                ,("i64", i642)
-                ,("u64", u642)
-                ,("f", f2)
                 ,("d", d2)
-                ,("i64max", i64max2)
-                ,("u64max", u64max2)
+                ,("s", s2)
             )
         );
-        if ( b!=b2||c!=c2||uc!=uc2||s!=s2||us!=us2||i!=i2||l!=l2||i64!=i642||u64!=u642||f!=f2||d!=d2||i64max!=i64max2||u64max!=u64max2 ) {
+        if ( i != i2 || d != d2 || s != s2 ) {
             YAS_TEST_REPORT(log, archive_type, test_name);
             return false;
         }
     }
-    b2=0;c2=0;uc2=0;s2=0;us2=0;i2=0;l2=0;i642=0;u642=0;i64max2=0;u64max2=0;f2=0;d2=0;
+
     {
+        // yas::file_ostream/yas::file_istream
+
+        i2 = 0;
+        d2 = 0;
+        s2.clear();
+
         const char *fname = "file.txt";
         std::remove(fname);
 
-        yas::save<yas::file|yas::text>(fname, o0);
-        yas::load<yas::file|yas::text>(
-             fname
+        yas::file_ostream os(fname);
+        yas::save<yas::file|yas::json>(os, o0);
+        os.flush();
+
+        yas::file_istream is(fname);
+        yas::load<yas::file|yas::json>(
+             is
             ,YAS_OBJECT_NVP(
                 "obj"
-                ,("b", b2)
-                ,("c", c2)
-                ,("uc", uc2)
-                ,("s", s2)
-                ,("us", us2)
                 ,("i", i2)
-                ,("l", l2)
-                ,("i64", i642)
-                ,("u64", u642)
-                ,("f", f2)
                 ,("d", d2)
-                ,("i64max", i64max2)
-                ,("u64max", u64max2)
+                ,("s", s2)
             )
         );
-        if ( b!=b2||c!=c2||uc!=uc2||s!=s2||us!=us2||i!=i2||l!=l2||i64!=i642||u64!=u642||f!=f2||d!=d2||i64max!=i64max2||u64max!=u64max2 ) {
+        if ( i != i2 || d != d2 || s != s2 ) {
+            YAS_TEST_REPORT(log, archive_type, test_name);
+            return false;
+        }
+    }
+
+    {
+        // std::ofstream/std::ifstream
+        i2 = 0;
+        d2 = 0;
+        s2.clear();
+
+        const char *fname = "file.txt";
+        std::remove(fname);
+
+        std::ofstream ostream(fname, std::ios::binary);
+        yas::std_ostream_adapter os(ostream);
+        yas::save<yas::file|yas::json>(os, o0);
+        ostream.close();
+
+        std::ifstream istream(fname, std::ios::binary);
+        yas::std_istream_adapter is(istream);
+        yas::load<yas::file|yas::json>(
+             is
+            ,YAS_OBJECT_NVP(
+                "obj"
+                ,("i", i2)
+                ,("d", d2)
+                ,("s", s2)
+            )
+        );
+        if ( i != i2 || d != d2 || s != s2 ) {
             YAS_TEST_REPORT(log, archive_type, test_name);
             return false;
         }

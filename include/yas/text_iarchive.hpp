@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -64,7 +64,7 @@ namespace yas {
 template<
      typename IS
     ,std::size_t F = text|ehost
-    ,typename Trait = yas::detail::default_traits
+    ,typename Trait = yas::default_traits
 >
 struct text_iarchive
 	:detail::text_istream<IS, F, Trait>
@@ -104,6 +104,11 @@ struct text_iarchive
 
 	template<typename... Args>
 	this_type& operator()(Args&&... args) {
+		return serialize(std::forward<Args>(args)...);
+	}
+
+	template<typename... Args>
+	this_type& load(Args&&... args) {
 		return serialize(std::forward<Args>(args)...);
 	}
 };

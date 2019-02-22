@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -44,6 +44,10 @@ namespace yas {
 
 __YAS_DECLARE_EXCEPTION_TYPE(serialization_exception)
 
+struct no_json_key_exception: serialization_exception {
+    using serialization_exception::serialization_exception;
+};
+
 /***************************************************************************/
 
 #define __YAS_THROW_BAD_ARRAY_SIZE() \
@@ -65,17 +69,17 @@ __YAS_DECLARE_EXCEPTION_TYPE(serialization_exception)
 	__YAS_THROW_EXCEPTION(::yas::serialization_exception, "bad size on deserialize " type);
 
 #define __YAS_THROW_IF_BAD_JSON_CHARS(ar, chars) { \
-        char tmp[sizeof(chars)] = "\0"; \
+        char tmp[sizeof(chars)]; \
         ar.read(tmp, sizeof(tmp)-1); \
         if ( std::memcmp(tmp, chars, sizeof(chars)-1) != 0 ) { \
             __YAS_THROW_EXCEPTION(::yas::serialization_exception, "no expected chars '" chars "'"); \
         } \
     }
 
-#define __YAS_THROW_UNEXPECTED_JSON_KEY(msg) \
-    __YAS_THROW_EXCEPTION(::yas::serialization_exception, msg);
-
 #define __YAS_THROW_NO_EXPECTED_JSON_KEY(msg) \
+    __YAS_THROW_EXCEPTION(::yas::no_json_key_exception, msg);
+
+#define __YAS_THROW_UNEXPECTED_JSON_KEY(msg) \
     __YAS_THROW_EXCEPTION(::yas::serialization_exception, msg);
 
 #define __YAS_THROW_INVALID_JSON_STRING(msg) \

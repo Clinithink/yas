@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -37,7 +37,7 @@
 #define __yas__detail__type_traits__type_traits_hpp
 
 #include <yas/detail/config/endian.hpp>
-#include <yas/detail/type_traits/has_method_serialize.hpp>
+#include <yas/detail/type_traits/has_memfn_serialize.hpp>
 #include <yas/detail/type_traits/has_function_serialize.hpp>
 #include <yas/version.hpp>
 
@@ -50,26 +50,26 @@ namespace detail {
 /***************************************************************************/
 
 template<
-	 typename T
-	,typename A1
-	,typename A2 = void
-	,typename A3 = void
-	,typename A4 = void
-	,typename A5 = void
-	,typename A6 = void
-	,typename A7 = void
-	,typename A8 = void
+     typename T
+    ,typename A1
+    ,typename A2 = void
+    ,typename A3 = void
+    ,typename A4 = void
+    ,typename A5 = void
+    ,typename A6 = void
+    ,typename A7 = void
+    ,typename A8 = void
 >
 struct is_any_of: std::integral_constant<
-	bool
-	,  std::is_same<T, A1>::value
-	|| std::is_same<T, A2>::value
-	|| std::is_same<T, A3>::value
-	|| std::is_same<T, A4>::value
-	|| std::is_same<T, A5>::value
-	|| std::is_same<T, A6>::value
-	|| std::is_same<T, A7>::value
-	|| std::is_same<T, A8>::value
+    bool
+    ,  std::is_same<T, A1>::value
+    || std::is_same<T, A2>::value
+    || std::is_same<T, A3>::value
+    || std::is_same<T, A4>::value
+    || std::is_same<T, A5>::value
+    || std::is_same<T, A6>::value
+    || std::is_same<T, A7>::value
+    || std::is_same<T, A8>::value
 >
 {};
 
@@ -77,84 +77,167 @@ struct is_any_of: std::integral_constant<
 
 template<typename T>
 struct is_array_of_fundamentals
-	:std::integral_constant<
-		 bool
-		,std::is_array<T>::value && std::is_fundamental<typename std::remove_all_extents<T>::type>::value
-	>
+    :std::integral_constant<
+         bool
+        ,std::is_array<T>::value && std::is_fundamental<typename std::remove_all_extents<T>::type>::value
+    >
 {};
 
 /***************************************************************************/
 
 template<typename T, typename... Types>
 struct enable_if_is_any_of
-	:std::enable_if<is_any_of<T, Types...>::value>
+    :std::enable_if<is_any_of<T, Types...>::value>
 {};
 
 template<typename T, typename... Types>
 struct disable_if_is_any_of
-	:std::enable_if<!is_any_of<T, Types...>::value>
+    :std::enable_if<!is_any_of<T, Types...>::value>
 {};
 
 #define __YAS_ENABLE_IF_IS_ANY_OF(T, ...) \
-	typename ::yas::detail::enable_if_is_any_of<T, __VA_ARGS__>::type* = 0
+    typename ::yas::detail::enable_if_is_any_of<T, __VA_ARGS__>::type* = 0
 
 #define __YAS_DISABLE_IF_IS_ANY_OF(T, ...) \
-	typename ::yas::detail::disable_if_is_any_of<T, __VA_ARGS__>::type* = 0
+    typename ::yas::detail::disable_if_is_any_of<T, __VA_ARGS__>::type* = 0
+
+/***************************************************************************/
+
+template<typename T>
+struct is_signed_integer: std::integral_constant<
+    bool
+    , std::is_signed<T>::value
+    && std::is_integral<T>::value
+    && std::is_same<T, char>::value == false
+    && std::is_same<T, signed char>::value == false
+
+>
+{};
+
+template<typename T>
+struct is_unsigned_integer: std::integral_constant<
+    bool
+    , std::is_unsigned<T>::value
+    && std::is_integral<T>::value
+    && std::is_same<T, unsigned char>::value == false
+    && std::is_same<T, bool>::value == false
+>
+{};
+
+template<typename T>
+struct enable_if_is_signed_integer
+    :std::enable_if<is_signed_integer<T>::value>
+{};
+
+template<typename T>
+struct enable_if_is_unsigned_integer
+    :std::enable_if<is_unsigned_integer<T>::value>
+{};
+
+#define __YAS_ENABLE_IF_IS_SIGNED_INTEGER(T) \
+    typename ::yas::detail::enable_if_is_signed_integer<T>::type* = 0
+
+#define __YAS_ENABLE_IF_IS_UNSIGNED_INTEGER(T) \
+    typename ::yas::detail::enable_if_is_unsigned_integer<T>::type* = 0
+
+/***************************************************************************/
+
+template<typename T>
+struct is_16bit: std::integral_constant<
+    bool, sizeof(T) == 2
+>
+{};
+
+template<typename T>
+struct is_32bit: std::integral_constant<
+    bool, sizeof(T) == 4
+>
+{};
+
+template<typename T>
+struct is_64bit: std::integral_constant<
+    bool, sizeof(T) == 8
+>
+{};
+
+template<typename T>
+struct enable_if_is_16bit
+    :std::enable_if<is_16bit<T>::value>
+{};
+
+template<typename T>
+struct enable_if_is_32bit
+    :std::enable_if<is_32bit<T>::value>
+{};
+
+template<typename T>
+struct enable_if_is_64bit
+    :std::enable_if<is_64bit<T>::value>
+{};
+
+#define __YAS_ENABLE_IF_IS_16BIT(T) \
+    typename ::yas::detail::enable_if_is_16bit<T>::type* = 0
+
+#define __YAS_ENABLE_IF_IS_32BIT(T) \
+    typename ::yas::detail::enable_if_is_32bit<T>::type* = 0
+
+#define __YAS_ENABLE_IF_IS_64BIT(T) \
+    typename ::yas::detail::enable_if_is_64bit<T>::type* = 0
 
 /***************************************************************************/
 
 enum class type_prop {
-	 is_enum
-	,is_fundamental
-	,is_array
-	,is_array_of_fundamentals
-	,not_a_fundamental
+     is_enum
+    ,is_fundamental
+    ,is_array
+    ,is_array_of_fundamentals
+    ,not_a_fundamental
 };
 
-enum class ser_method {
-	 has_one_method
-	,has_split_methods
-	,has_one_function
-	,has_split_functions
-	,use_internal_serializer
+enum class ser_case {
+     has_one_memfn
+    ,has_split_memfns
+    ,has_one_function
+    ,has_split_functions
+    ,use_internal_serializer
 };
 
 template<typename T>
 struct type_properties {
-	static constexpr type_prop value =
-		std::is_enum<T>::value
-		? type_prop::is_enum
-		: std::is_fundamental<T>::value
-			? type_prop::is_fundamental
-			: is_array_of_fundamentals<T>::value
-				? type_prop::is_array_of_fundamentals
-				: std::is_array<T>::value
-					? type_prop::is_array
-					: type_prop::not_a_fundamental
-	;
+    static constexpr type_prop value =
+        std::is_enum<T>::value
+        ? type_prop::is_enum
+        : std::is_fundamental<T>::value
+            ? type_prop::is_fundamental
+            : is_array_of_fundamentals<T>::value
+                ? type_prop::is_array_of_fundamentals
+                : std::is_array<T>::value
+                    ? type_prop::is_array
+                    : type_prop::not_a_fundamental
+    ;
 };
 
 template<typename T, typename Ar>
 struct serialization_method {
 private:
-	enum {
-		 is_fundamental = std::is_fundamental<T>::value
-		,is_array = std::is_array<T>::value
-		,is_enum = std::is_enum<T>::value
-	};
+    enum {
+         is_fundamental = std::is_fundamental<T>::value
+        ,is_array = std::is_array<T>::value
+        ,is_enum = std::is_enum<T>::value
+    };
 
 public:
-	static constexpr ser_method value =
-		has_const_method_serializer<is_fundamental || is_array, is_enum, T, void(Ar)>::value
-		? ser_method::has_split_methods
-		: has_method_serializer<is_fundamental || is_array, is_enum, T, void(Ar)>::value
-			? ser_method::has_one_method
-			: has_function_const_serialize<is_fundamental || is_array, is_enum, Ar, T>::value
-				? ser_method::has_split_functions
-				: has_function_serialize<is_fundamental || is_array, is_enum, Ar, T>::value
-					? ser_method::has_one_function
-					: ser_method::use_internal_serializer
-	;
+    static constexpr ser_case value =
+        has_const_memfn_serializer<is_fundamental || is_array, is_enum, T, void(Ar)>::value
+        ? ser_case::has_split_memfns
+        : has_memfn_serializer<is_fundamental || is_array, is_enum, T, void(Ar)>::value
+            ? ser_case::has_one_memfn
+            : has_function_const_serialize<is_fundamental || is_array, is_enum, Ar, T>::value
+                ? ser_case::has_split_functions
+                : has_function_serialize<is_fundamental || is_array, is_enum, Ar, T>::value
+                    ? ser_case::has_one_function
+                    : ser_case::use_internal_serializer
+    ;
 };
 
 /***************************************************************************/
@@ -164,15 +247,15 @@ public:
 /***************************************************************************/
 
 enum options: std::uint32_t {
-	 binary    = 1u<<0
-	,text      = 1u<<1
-	,json      = 1u<<2
-	,no_header = 1u<<3
-	,elittle   = 1u<<4
-	,ebig      = 1u<<5
-	,ehost     = 1u<<6
-	,compacted = 1u<<7
-	,mem       = 1u<<8
+     binary    = 1u<<0
+    ,text      = 1u<<1
+    ,json      = 1u<<2
+    ,no_header = 1u<<3
+    ,elittle   = 1u<<4
+    ,ebig      = 1u<<5
+    ,ehost     = 1u<<6
+    ,compacted = 1u<<7
+    ,mem       = 1u<<8
     ,file      = 1u<<9
 };
 

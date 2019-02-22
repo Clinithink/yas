@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -75,6 +75,20 @@ bool vector_test(std::ostream &log, const char *archive_type, const char *test_n
     ia2 & YAS_OBJECT_NVP("obj", ("ev", evv));
 
     if ( ev != evv ) {
+        YAS_TEST_REPORT(log, archive_type, test_name);
+        return false;
+    }
+
+    std::vector<bool> obvec{true, false}, ibvec;
+    typename archive_traits::oarchive oa3;
+    archive_traits::ocreate(oa3, archive_type);
+    oa3 & YAS_OBJECT_NVP("obj", ("v", obvec));
+
+    typename archive_traits::iarchive ia3;
+    archive_traits::icreate(ia3, oa3, archive_type);
+    ia3 & YAS_OBJECT_NVP("obj", ("v", ibvec));
+
+    if ( ibvec != obvec ) {
         YAS_TEST_REPORT(log, archive_type, test_name);
         return false;
     }

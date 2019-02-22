@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -37,14 +37,10 @@
 #define __yas__types__boost__boost_optional_serializers_hpp
 
 #if defined(YAS_SERIALIZE_BOOST_TYPES)
-#include <yas/detail/type_traits/type_traits.hpp>
-#include <yas/detail/type_traits/serializer.hpp>
-#include <yas/detail/io/serialization_exceptions.hpp>
 
-#include <yas/object.hpp>
+#include <yas/types/concepts/optional.hpp>
 
 #include <boost/optional.hpp>
-#include <boost/move/move.hpp>
 
 namespace yas {
 namespace detail {
@@ -54,74 +50,18 @@ namespace detail {
 template<std::size_t F, typename T>
 struct serializer<
 	type_prop::not_a_fundamental,
-	ser_method::use_internal_serializer,
+	ser_case::use_internal_serializer,
 	F,
 	boost::optional<T>
 > {
 	template<typename Archive>
 	static Archive& save(Archive& ar, const boost::optional<T> &t) {
-		const bool inited = __YAS_SCAST(bool, t);
-        __YAS_CONSTEXPR_IF ( F & yas::json ) {
-            if ( inited ) {
-                ar.write("[", 1);
-                static const char obj[] = "{\"inited\":true},";
-                ar.write(obj, sizeof(obj)-1);
-                ar & YAS_OBJECT_NVP(nullptr, ("val", t.get()));
-                ar.write("]", 1);
-            } else {
-                static const char obj[] = "[{\"inited\":false}]";
-                ar.write(obj, sizeof(obj)-1);
-            }
-        } else {
-            ar.write(inited);
-            if ( inited ) {
-                ar & t.get();
-            }
-        }
-
-		return ar;
+	    return concepts::optional::save<F>(ar, t);
 	}
 
 	template<typename Archive>
 	static Archive& load(Archive& ar, boost::optional<T> &t) {
-        __YAS_CONSTEXPR_IF ( F & yas::json ) {
-            __YAS_CONSTEXPR_IF ( !(F & yas::compacted) ) {
-                json_skipws(ar);
-            }
-            __YAS_THROW_IF_BAD_JSON_CHARS(ar, "[");
-            bool inited = false;
-            ar & YAS_OBJECT(nullptr, inited);
-            if ( !inited ) {
-                __YAS_THROW_IF_BAD_JSON_CHARS(ar, "]");
-
-                return ar;
-            }
-            __YAS_CONSTEXPR_IF ( !(F & yas::compacted) ) {
-                json_skipws(ar);
-            }
-            __YAS_THROW_IF_BAD_JSON_CHARS(ar, ",");
-
-            T val = T();
-            ar & YAS_OBJECT(nullptr, val);
-            t = std::move(val);
-
-            __YAS_CONSTEXPR_IF ( !(F & yas::compacted) ) {
-                json_skipws(ar);
-            }
-            __YAS_THROW_IF_BAD_JSON_CHARS(ar, "]");
-        } else {
-            bool inited = false;
-            ar.read(inited);
-            if ( inited ) {
-                T val = T();
-                ar & val;
-                t = boost::move(val);
-            } else {
-                t = boost::optional<T>();
-            }
-        }
-
-		return ar;
+		return concepts::optional::load<F>(ar, t);
 	}
 };
 

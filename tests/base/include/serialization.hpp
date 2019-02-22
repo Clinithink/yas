@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -67,6 +67,45 @@ bool serialization_test(std::ostream &log, const char *archive_type, const char 
 		YAS_TEST_REPORT(log, archive_type, test_name);
 		return false;
 	}
+
+
+	r0=0,r1=0,r2=0,r3=0;
+	typename archive_traits::oarchive oa3;
+	archive_traits::ocreate(oa3, archive_type);
+	oa3.save(YAS_OBJECT_NVP("obj", ("v0", w0), ("v1", w1), ("v2", w2), ("v3", w3)));
+
+	typename archive_traits::iarchive ia3;
+	archive_traits::icreate(ia3, oa3, archive_type);
+	ia3.load(YAS_OBJECT_NVP("obj", ("v0", r0), ("v1", r1), ("v2", r2), ("v3", r3)));
+
+	if ( r0!=w0 || r1!=w1 || r2!=w2 || r3!=w3) {
+		YAS_TEST_REPORT(log, archive_type, test_name);
+		return false;
+	}
+
+	// null streams compilation test
+    {
+        try {
+            yas::null_ostream binary_os;
+            yas::binary_oarchive<yas::null_ostream> binary_oa(binary_os);
+            yas::null_istream binary_is(binary_os.get_intrusive_buffer());
+            yas::binary_iarchive<yas::null_istream> binary_ia(binary_is);
+        } catch (const yas::io_exception &) {
+        }
+
+        try {
+            yas::null_ostream text_os;
+            yas::text_oarchive<yas::null_ostream> text_oa(text_os);
+            yas::null_istream text_is(text_os.get_intrusive_buffer());
+            yas::text_iarchive<yas::null_istream> text_ia(text_is);
+        } catch (const yas::io_exception &) {
+        }
+
+        yas::null_ostream json_os;
+        yas::json_oarchive<yas::null_ostream> json_oa(json_os);
+        yas::null_istream json_is(json_os.get_intrusive_buffer());
+        yas::json_iarchive<yas::null_istream> json_ia(json_is);
+    }
 
 	return true;
 }

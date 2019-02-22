@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -41,39 +41,40 @@
 #include <cstdint>
 
 namespace yas {
-namespace detail {
+namespace typeinfo {
 
 /***************************************************************************/
 
 template<typename T>
 struct typeinfo;
 
-#define __YAS_GENERATE_TYPEINFO(t) \
+#define __YAS_DEFINE_TYPEINFO(t) \
     template<> \
     struct typeinfo<t> { \
         static constexpr const char name[]  = #t; \
-        static constexpr std::uint32_t size = sizeof(t); \
+        static constexpr std::size_t namelength = sizeof(name)-1; \
+        static constexpr std::size_t size = sizeof(t); \
         static constexpr std::uint32_t hash = fnv1a(name); \
     };
 
-__YAS_GENERATE_TYPEINFO(bool)
-__YAS_GENERATE_TYPEINFO(char)
-__YAS_GENERATE_TYPEINFO(std::int8_t)
-__YAS_GENERATE_TYPEINFO(std::uint8_t)
-__YAS_GENERATE_TYPEINFO(std::int16_t)
-__YAS_GENERATE_TYPEINFO(std::uint16_t)
-__YAS_GENERATE_TYPEINFO(std::int32_t)
-__YAS_GENERATE_TYPEINFO(std::uint32_t)
-__YAS_GENERATE_TYPEINFO(std::int64_t)
-__YAS_GENERATE_TYPEINFO(std::uint64_t)
-__YAS_GENERATE_TYPEINFO(float)
-__YAS_GENERATE_TYPEINFO(double)
+__YAS_DEFINE_TYPEINFO(bool)
+__YAS_DEFINE_TYPEINFO(char)
+__YAS_DEFINE_TYPEINFO(std::int8_t)
+__YAS_DEFINE_TYPEINFO(std::uint8_t)
+__YAS_DEFINE_TYPEINFO(std::int16_t)
+__YAS_DEFINE_TYPEINFO(std::uint16_t)
+__YAS_DEFINE_TYPEINFO(std::int32_t)
+__YAS_DEFINE_TYPEINFO(std::uint32_t)
+__YAS_DEFINE_TYPEINFO(std::int64_t)
+__YAS_DEFINE_TYPEINFO(std::uint64_t)
+__YAS_DEFINE_TYPEINFO(float)
+__YAS_DEFINE_TYPEINFO(double)
 
-#undef __YAS_GENERATE_TYPEINFO
+#undef __YAS_DEFINE_TYPEINFO
 
 /***************************************************************************/
 
-} // ns detail
+} // ns typeinfo
 } // ns yas
 
 #endif // __yas__detail__type_traits__typeinfo_hpp

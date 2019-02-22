@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -38,6 +38,7 @@
 
 #if defined(YAS_SERIALIZE_BOOST_TYPES)
 #include <yas/detail/tools/cast.hpp>
+#include <yas/detail/tools/tuple_element_name.hpp>
 #include <yas/detail/type_traits/type_traits.hpp>
 #include <yas/detail/type_traits/serializer.hpp>
 #include <yas/detail/io/serialization_exceptions.hpp>
@@ -53,7 +54,7 @@ namespace detail {
 template<std::size_t F, typename... Types>
 struct serializer<
 	 type_prop::not_a_fundamental
-	,ser_method::use_internal_serializer
+	,ser_case::use_internal_serializer
 	,F
 	,boost::tuple<Types...>
 > {

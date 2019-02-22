@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -102,11 +102,6 @@ bool header_test(std::ostream &log, const char* archive_type, const char *test_n
                 YAS_TEST_REPORT_IF(yas::archive_endian(ibuf) != arendian, log, archive_type, test_name, return false;);
                 YAS_TEST_REPORT_IF(yas::archive_endian(sbuf) != arendian, log, archive_type, test_name, return false;);
             }
-
-            YAS_TEST_REPORT_IF(yas::archive_is_32bit(ibuf) != (sizeof(void*) == 4), log, archive_type, test_name, return false;);
-            YAS_TEST_REPORT_IF(yas::archive_is_32bit(sbuf) != (sizeof(void*) == 4), log, archive_type, test_name, return false;);
-            YAS_TEST_REPORT_IF(yas::archive_is_64bit(ibuf) != (sizeof(void*) == 8), log, archive_type, test_name, return false;);
-            YAS_TEST_REPORT_IF(yas::archive_is_64bit(sbuf) != (sizeof(void*) == 8), log, archive_type, test_name, return false;);
 
             const bool arcompacted = (archive_traits::oarchive_type::flags() & yas::compacted);
             YAS_TEST_REPORT_IF(yas::archive_is_compacted(ibuf) != arcompacted, log, archive_type, test_name, return false;);

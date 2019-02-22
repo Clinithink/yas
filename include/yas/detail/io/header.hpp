@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -58,9 +58,8 @@ union archive_header {
         std::uint8_t version   :4; // version      : 0...15
         std::uint8_t type      :3; // archive type : 0...7: binary, text, json
         std::uint8_t endian    :1; // endianness   : 0 - LE, 1 - BE
-        std::uint8_t bits      :1; // bitness      : 0 - 32 bit, 1 - 64 bit
         std::uint8_t compacted :1; // compacted    : 0 - no, 1 - yes
-        std::uint8_t reserved  :6; // reserved
+        std::uint8_t reserved  :7; // reserved
     } bits;
 
     std::uint16_t u;
@@ -94,7 +93,7 @@ void read_header(IO &io, archive_header &h) {
     if ( 0 != std::memcmp(buf, yas_id, sizeof(yas_id)) )
         __YAS_THROW_BAD_ARCHIVE_INFORMATION();
 
-    constexpr std::uint8_t d = std::numeric_limits<std::uint8_t>::max();
+    constexpr std::uint8_t d = (std::numeric_limits<std::uint8_t>::max)();
     constexpr std::uint8_t hexmap[256] = {
         d , d, d, d, d, d, d, d, d, d, d, d, d, d, d, d, d, d, d, d
         ,d , d, d, d, d, d, d, d, d, d, d, d, d, d, d, d, d, d, d, d
@@ -187,7 +186,6 @@ struct oarchive_header {
                  __YAS_SCAST(std::uint8_t, version() & 15)
                 ,__YAS_SCAST(std::uint8_t, artype)
                 ,__YAS_SCAST(std::uint8_t, endian)
-                ,__YAS_SCAST(std::uint8_t, sizeof(void *) == sizeof(std::uint64_t))
                 ,__YAS_SCAST(std::uint8_t, compacted)
                 ,__YAS_SCAST(std::uint8_t, 0u) // reserved
             }};
@@ -202,9 +200,6 @@ struct oarchive_header {
     static constexpr options type() {
         return __YAS_SCAST(options, F & (options::binary|options::text|options::json));
     }
-
-    static constexpr bool is_32bit_archive() { return sizeof(void*) == sizeof(std::uint32_t); }
-    static constexpr bool is_64bit_archive() { return !is_32bit_archive(); }
 
     static constexpr bool is_big_endian() {
         return __YAS_SCAST(bool,
@@ -269,13 +264,6 @@ struct iarchive_header {
 
         return __YAS_SCAST(options, header.bits.type);
     }
-
-    bool is_32bit_archive() {
-        __YAS_CHECK_IF_HEADER_INITED()
-
-        return header.bits.bits == 0;
-    }
-    bool is_64bit_archive() { return !is_32bit_archive(); }
 
     bool is_big_endian() const {
         __YAS_CHECK_IF_HEADER_INITED()

@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -40,6 +40,7 @@
 
 template<typename archive_traits>
 bool boost_variant_test(std::ostream &log, const char *archive_type, const char *test_name) {
+#if defined(YAS_SERIALIZE_BOOST_TYPES)
     {
         boost::variant<int, double> v0(3.14), v1;
 
@@ -85,6 +86,7 @@ bool boost_variant_test(std::ostream &log, const char *archive_type, const char 
             return false;
         }
     }
+#endif // #if defined(YAS_SERIALIZE_BOOST_TYPES)
 
     return true;
 }

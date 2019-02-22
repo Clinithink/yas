@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -39,6 +39,7 @@
 #include <yas/detail/type_traits/serializer.hpp>
 #include <yas/detail/tools/cast.hpp>
 #include <yas/detail/tools/save_load_string.hpp>
+#include <yas/detail/tools/json_tools.hpp>
 
 #include <string>
 #include <cassert>
@@ -51,7 +52,7 @@ namespace detail {
 template<std::size_t F>
 struct serializer<
      type_prop::not_a_fundamental
-    ,ser_method::use_internal_serializer
+    ,ser_case::use_internal_serializer
     ,F
     ,std::string
 > {
@@ -62,7 +63,7 @@ struct serializer<
                 ar.write("null", 4);
             } else {
                 ar.write("\"", 1);
-                save_string(ar, str);
+                save_string(ar, str.data(), str.size());
                 ar.write("\"", 1);
             }
         } else {
@@ -76,7 +77,7 @@ struct serializer<
     template<typename Archive>
     static Archive& load(Archive& ar, std::string &str) {
         if ( F & yas::json ) {
-            const char ch = ar.getch();
+            char ch = ar.getch();
             if ( ch == '\"' ) {
                 load_string(str, ar);
                 __YAS_THROW_IF_BAD_JSON_CHARS(ar, "\"");
@@ -84,6 +85,11 @@ struct serializer<
                 ar.ungetch(ch);
                 __YAS_THROW_IF_BAD_JSON_CHARS(ar, "null");
                 str.clear();
+            } else if ( is_valid_for_int_and_double(ar, ch) ) {
+                str += ch;
+                for ( ch = ar.peekch(); is_valid_for_int_and_double(ar, ch); ch = ar.peekch() ) {
+                    str += ar.getch();
+                }
             } else {
                 __YAS_THROW_IF_BAD_JSON_CHARS(ar, "unreachable");
             }

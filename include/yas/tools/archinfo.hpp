@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -177,42 +177,6 @@ inline options archive_endian(const char *fname) {
 
     return archive_endian(header);
 }
-
-/***************************************************************************/
-
-inline bool archive_bitness(const detail::header::archive_header &h) {
-    return h.bits.bits;
-}
-
-inline bool archive_bitness(const yas::intrusive_buffer &buf) {
-    const auto header = read_header(buf);
-
-    return archive_bitness(header);
-}
-
-inline bool archive_bitness(const yas::shared_buffer &buf) {
-    const auto header = read_header(buf);
-
-    return archive_bitness(header);
-}
-
-inline bool archive_bitness(const char *fname) {
-    const auto header = read_header(fname);
-
-    return archive_bitness(header);
-}
-
-/***************************************************************************/
-
-inline bool archive_is_32bit(const detail::header::archive_header &h) { return archive_bitness(h) == false; }
-inline bool archive_is_32bit(const yas::intrusive_buffer &buf) { return archive_bitness(buf) == false; }
-inline bool archive_is_32bit(const yas::shared_buffer &buf) { return archive_bitness(buf) == false; }
-inline bool archive_is_32bit(const char *fname) { return archive_bitness(fname) == false; }
-
-inline bool archive_is_64bit(const detail::header::archive_header &h) { return archive_bitness(h) == true; }
-inline bool archive_is_64bit(const yas::intrusive_buffer &buf) { return archive_bitness(buf) == true; }
-inline bool archive_is_64bit(const yas::shared_buffer &buf) { return archive_bitness(buf) == true; }
-inline bool archive_is_64bit(const char *fname) { return archive_bitness(fname) == true; }
 
 /***************************************************************************/
 

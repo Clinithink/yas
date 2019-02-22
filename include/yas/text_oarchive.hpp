@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -64,7 +64,7 @@ namespace yas {
 template<
      typename OS
     ,std::size_t F = text|ehost
-    ,typename Trait = yas::detail::default_traits
+    ,typename Trait = yas::default_traits
 >
 struct text_oarchive
 	:detail::text_ostream<OS, F, Trait>
@@ -101,6 +101,11 @@ struct text_oarchive
 
 	template<typename... Args>
 	this_type& operator()(const Args&... args) {
+		return serialize(args...);
+	}
+
+	template<typename... Args>
+	this_type& save(const Args&... args) {
 		return serialize(args...);
 	}
 };

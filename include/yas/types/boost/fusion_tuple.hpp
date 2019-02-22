@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -44,6 +44,9 @@
 #include <yas/detail/io/serialization_exceptions.hpp>
 
 #include <boost/fusion/tuple.hpp>
+#include <boost/fusion/sequence/intrinsic/at_c.hpp>
+#include <boost/fusion/include/at_c.hpp>
+
 
 namespace yas {
 namespace detail {
@@ -53,7 +56,7 @@ namespace detail {
 template<std::size_t F, typename... Types>
 struct serializer<
 	 type_prop::not_a_fundamental
-	,ser_method::use_internal_serializer
+	,ser_case::use_internal_serializer
 	,F
 	,boost::fusion::tuple<Types...>
 > {

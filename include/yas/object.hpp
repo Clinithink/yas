@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -39,221 +39,39 @@
 #include <yas/detail/preprocessor/preprocessor.hpp>
 #include <yas/detail/type_traits/type_traits.hpp>
 #include <yas/detail/tools/fnv1a.hpp>
+#include <yas/detail/tools/ctsort.hpp>
+#include <yas/detail/tools/ctmap.hpp>
 
-#include <tuple>
 #include <cstring>
 
 namespace yas {
-namespace detail {
 
 /***************************************************************************/
 
-template<typename, typename>
-struct concat;
-
-template<typename... Xs, typename... Ys>
-struct concat<std::tuple<Xs...>, std::tuple<Ys...>> {
-    using type = std::tuple<Xs..., Ys...>;
-};
-
-template<typename X, typename TPL>
-struct split_accum_fst {
-    using type = std::tuple<
-        typename concat<
-             std::tuple<X>
-            ,typename std::tuple_element<0,TPL>::type
-        >::type
-        ,typename std::tuple_element<1,TPL>::type
-    >;
-};
-
-template<typename, typename>
-struct split_gather {};
-
-template<typename X, typename... Xs, typename ignore1, typename ignore2, typename... Ys>
-struct split_gather<std::tuple<X, Xs...>, std::tuple<ignore1, ignore2, Ys...>>  {
-    using type = typename split_accum_fst<
-         X
-        ,typename split_gather<
-             std::tuple<Xs...>
-            ,std::tuple<Ys...>
-        >::type
-    >::type;
-};
-
-template<typename ... Xs, typename ignore>
-struct split_gather<std::tuple<Xs...>, ignore>  {
-    using type = std::tuple<std::tuple<>, std::tuple<Xs...>>;
-};
-
-template<typename SEQ>
-struct split {
-    using type = typename split_gather<SEQ, SEQ>::type;
-};
-
-template<template<typename, typename> class PRED, typename SEQ1, typename SEQ2>
-struct merge {};
-
-template<template<typename, typename> class PRED, typename SEQ>
-struct merge<PRED, SEQ, std::tuple<>> {
-    using type = SEQ;
-};
-
-template<template<typename, typename> class PRED, typename SEQ>
-struct merge<PRED, std::tuple<>, SEQ> {
-    using type = SEQ;
-};
-
-template<template<typename, typename> class PRED, typename X, typename... Xs, typename Y, typename... Ys>
-struct merge<PRED, std::tuple<X, Xs...>, std::tuple<Y, Ys...>>  {
-    template<bool cond, typename T1, typename T2>
-    struct merge_case { //case true
-        using type = T1;
-    };
-
-    template<typename T1, typename T2>
-    struct merge_case<0, T1, T2> { //case false
-        using type = T2;
-    };
-
-    using type = typename merge_case<
-         PRED<X, Y>::value
-        ,typename concat<
-             std::tuple<X>
-            ,typename merge<
-                 PRED
-                ,std::tuple<Xs...>
-                ,std::tuple<Y, Ys...>
-            >::type
-         >::type
-        ,typename concat<
-             std::tuple<Y>
-            ,typename merge<
-                 PRED
-                ,std::tuple<X, Xs...>
-                ,std::tuple<Ys...>
-            >::type
-        >::type
-    >::type;
-};
-
-template<template<typename, typename> class PRED, typename SEQ>
-struct mergesort {
-    using type = typename merge<PRED,
-        typename mergesort<
-             PRED
-            ,typename std::tuple_element<
-                 0
-                ,typename split<SEQ>::type
-            >::type
-         >::type
-        ,typename mergesort<
-             PRED
-            ,typename std::tuple_element<
-                 1
-                ,typename split<SEQ>::type
-            >::type
-        >::type
-    >::type;
-};
-
-template <template<typename, typename> class PRED, typename X>
-struct mergesort<PRED, std::tuple<X>> {
-    using type = std::tuple<X>;
-};
-
-template <template<typename, typename> class PRED>
-struct mergesort<PRED, std::tuple<>> {
-    using type = std::tuple<>;
-};
-
-template<typename lhs, typename rhs>
-struct predic_less {
-    enum { value = lhs::first_type::value < rhs::first_type::value };
-};
-
-/***********************************************************************************/
-
-using optional_t = std::pair<bool, std::uint8_t>;
-
-template<typename>
-struct ctmap;
-
-template<typename... KVI>
-struct ctmap<std::tuple<KVI...>> {
-    optional_t find(std::uint32_t k) const {
-        auto beg = &kvis[0];
-        auto end = &kvis[sizeof...(KVI)];
-        std::size_t count = sizeof...(KVI);
-
-        while ( count > 0 ) {
-            if ( (beg+count/2)->first < k ) {
-                beg = beg+count/2+1;
-                count -= count/2+1;
-            } else {
-                count = count/2;
-            }
-        }
-
-        return {(beg != end && beg->first == k), beg->second};
-    }
-
-    static constexpr std::pair<std::uint32_t, std::uint8_t> kvis[] = {
-        {KVI::first_type::value, KVI::second_type::value}...
-    };
-};
-template<typename... KVI>
-constexpr std::pair<std::uint32_t, std::uint8_t> ctmap<std::tuple<KVI...>>::kvis[];
-
-template<typename KVI>
-struct ctmap<std::tuple<KVI>> {
-    optional_t find(std::uint32_t k) const {
-        return {KVI::first_type::value == k, KVI::second_type::value};
-    }
-};
-
-template<>
-struct ctmap<std::tuple<>> {
-    optional_t find(std::uint32_t /*k*/) const {
-        return {false, 0};
-    }
-};
-
-/***********************************************************************************/
-
-} // ns detail
-
-/***************************************************************************/
-
-template<typename K, typename V>
+template<typename T>
 struct value {
-    template<typename KVT>
-    struct real_kvt {
+    template<typename VT>
+    struct real_value_type {
         using type = typename std::conditional<
-             std::is_array<typename std::remove_reference<KVT>::type>::value
-            ,typename std::remove_cv<KVT>::type
+             std::is_array<typename std::remove_reference<VT>::type>::value
+            ,typename std::remove_cv<VT>::type
             ,typename std::conditional<
-                 std::is_lvalue_reference<KVT>::value
-                ,KVT
-                ,typename std::decay<KVT>::type
+                 std::is_lvalue_reference<VT>::value
+                ,VT
+                ,typename std::decay<VT>::type
             >::type
         >::type;
     };
-    using key_type   = typename real_kvt<K>::type;
-    using value_type = typename real_kvt<V>::type;
+    using key_type   = const char*;
+    using value_type = typename real_value_type<T>::type;
 
     value(const value &) = delete;
     value& operator=(const value &) = delete;
 
-    constexpr value(const char *k, std::size_t klen, V &&v) noexcept
+    constexpr value(const char *k, std::size_t klen, T &&v) noexcept
         :key(k)
         ,klen(klen)
-        ,val(std::forward<V>(v))
-    {}
-    constexpr value(K &&k, V &&v) noexcept
-        :key(std::forward<K>(k))
-        ,klen(0)
-        ,val(std::forward<V>(v))
+        ,val(std::forward<T>(v))
     {}
     constexpr value(value &&r) noexcept
         :key(r.key)
@@ -261,42 +79,34 @@ struct value {
         ,val(std::forward<value_type>(r.val))
     {}
 
+    static constexpr bool is_fundamental() {
+        return std::is_fundamental<value_type>::value;
+    }
+    static constexpr std::size_t sizeof_() {
+        return sizeof(value_type);
+    }
+
     key_type key;
     const std::size_t klen;
     value_type val;
 };
 
-template<typename K, typename V>
-constexpr typename std::enable_if<
-    !std::is_same<
-         typename std::remove_reference<K>::type
-        ,const char*
-    >::value
-    ,value<K, V>
->::type
-make_val(K &&key, V &&val) {
-    return {std::forward<K>(key), std::forward<V>(val)};
+template<std::size_t N, typename T>
+constexpr value<T>
+make_val(const char (&key)[N], T &&val) {
+    return {key, N-1, std::forward<T>(val)};
 }
 
-template<std::size_t N, typename V>
-constexpr value<const char*, V>
-make_val(const char (&key)[N], V &&val) {
-    return {key, N-1, std::forward<V>(val)};
-}
-
-template<typename ConstCharPtr, typename V>
+template<typename ConstCharPtr, typename T>
 constexpr typename std::enable_if<
      std::is_same<ConstCharPtr, const char*>::value
-    ,value<const char*, V>
+    ,value<T>
 >::type
-make_val(ConstCharPtr key, V &&val) {
-    return {key, std::strlen(key), std::forward<V>(val)};
+make_val(ConstCharPtr key, T &&val) {
+    return {key, std::strlen(key), std::forward<T>(val)};
 }
 
 /***************************************************************************/
-
-template<typename, typename...>
-struct object;
 
 template<typename KVI, typename... Pairs>
 struct object {
@@ -316,11 +126,25 @@ struct object {
         ,pairs(std::move(r.pairs))
     {}
 
+    static constexpr bool is_fundamental() {
+        return _summ_impl(Pairs::is_fundamental()...) == sizeof...(Pairs);
+    }
+    static constexpr std::size_t sizeof_() {
+        return _summ_impl(Pairs::sizeof_()...);
+    }
+
     const char *key;
     const std::size_t klen;
     tuple pairs;
 
     static constexpr detail::ctmap<KVI> map{};
+
+private:
+    static constexpr std::size_t _summ_impl() { return 0; }
+    template<typename Head, typename ...Tails>
+    static constexpr std::size_t _summ_impl(Head head, Tails ...tails) {
+        return head + _summ_impl(tails...);
+    }
 };
 template<typename KVI, typename... Pairs>
 constexpr detail::ctmap<KVI> object<KVI, Pairs...>::map;
@@ -339,54 +163,80 @@ make_object(std::nullptr_t, Pairs &&... pairs) {
 
 /**************************************************************************/
 
-#define __YAS_ARG16(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, ...) _15
-#define __YAS_HAS_COMMA(...) __YAS_ARG16(__VA_ARGS__, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0)
-#define __YAS__TRIGGER_PARENTHESIS_(...) ,
-#define __YAS_PASTE5(_0, _1, _2, _3, _4) _0 ## _1 ## _2 ## _3 ## _4
-#define __YAS_IS_EMPTY_CASE_0001 ,
-#define __YAS_ISEMPTY(_0, _1, _2, _3) __YAS_HAS_COMMA(__YAS_PASTE5(__YAS_IS_EMPTY_CASE_, _0, _1, _2, _3))
-#define __YAS_TUPLE_IS_EMPTY_IMPL(...) \
-    __YAS_ISEMPTY( \
-        __YAS_HAS_COMMA(__VA_ARGS__), \
-        __YAS_HAS_COMMA(__YAS__TRIGGER_PARENTHESIS_ __VA_ARGS__),                 \
-        __YAS_HAS_COMMA(__VA_ARGS__ (/*empty*/)), \
-        __YAS_HAS_COMMA(__YAS__TRIGGER_PARENTHESIS_ __VA_ARGS__ (/*empty*/)) \
-    )
-
 #if defined(YAS_SERIALIZE_BOOST_TYPES)
 #   include <boost/version.hpp>
 #   if BOOST_VERSION >= 106000
-#       include <boost/vmd/is_empty.hpp>
-#       define __YAS_TUPLE_IS_EMPTY(...) BOOST_VMD_IS_EMPTY(__VA_ARGS__)
-#   else
-#       define __YAS_TUPLE_IS_EMPTY(...) __YAS_TUPLE_IS_EMPTY_IMPL(__VA_ARGS__)
+#       define __YAS_CAN_USE_BOOST_VMD
 #   endif // BOOST_VERSION >= 106000
-#else // !defined(YAS_SERIALIZE_BOOST_TYPES)
-#   define __YAS_TUPLE_IS_EMPTY(...) __YAS_TUPLE_IS_EMPTY_IMPL(__VA_ARGS__)
 #endif // defined(YAS_SERIALIZE_BOOST_TYPES)
+
+#ifdef __YAS_CAN_USE_BOOST_VMD
+#   include <boost/vmd/is_empty.hpp>
+#   define __YAS_PP_TUPLE_IS_EMPTY(...) BOOST_VMD_IS_EMPTY(__VA_ARGS__)
+#else
+#   define __YAS_PP_ARG50( \
+          _0 , _1 , _2 , _3 , _4 , _5 , _6 , _7 , _8 , _9 \
+        , _10, _11, _12, _13, _14, _15, _16, _17, _18, _19 \
+        , _20, _21, _22, _23, _24, _25, _26, _27, _28, _29 \
+        , _30, _31, _32, _33, _34, _35, _36, _37, _38, _39 \
+        , _40, _41, _42, _43, _44, _45, _46, _47, _48, _49 \
+        , ...) _49
+#   define __YAS_PP_HAS_COMMA(...) \
+        __YAS_PP_ARG50( \
+            __VA_ARGS__, \
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, \
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, \
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, \
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, \
+            1, 1, 1, 1, 1, 1, 1, 1, 0 \
+        )
+#   define __YAS_PP_TRIGGER_PARENTHESIS_(...) ,
+#   define __YAS_PP_PASTE5(_0, _1, _2, _3, _4) _0 ## _1 ## _2 ## _3 ## _4
+#   define __YAS_PP_IS_EMPTY_CASE_0001 ,
+#   define __YAS_PP_IS_EMPTY(_0, _1, _2, _3) __YAS_PP_HAS_COMMA(__YAS_PP_PASTE5(__YAS_PP_IS_EMPTY_CASE_, _0, _1, _2, _3))
+#   define __YAS_PP_TUPLE_IS_EMPTY_IMPL(...) \
+        __YAS_PP_IS_EMPTY( \
+            __YAS_PP_HAS_COMMA(__VA_ARGS__), \
+            __YAS_PP_HAS_COMMA(__YAS_PP_TRIGGER_PARENTHESIS_ __VA_ARGS__),                 \
+            __YAS_PP_HAS_COMMA(__VA_ARGS__ (/*empty*/)), \
+            __YAS_PP_HAS_COMMA(__YAS_PP_TRIGGER_PARENTHESIS_ __VA_ARGS__ (/*empty*/)) \
+        )
+#   define __YAS_PP_TUPLE_IS_EMPTY(...) __YAS_PP_TUPLE_IS_EMPTY_IMPL(__VA_ARGS__)
+#endif // __YAS_CAN_USE_BOOST_VMD
 
 /**************************************************************************/
 
-#define __YAS_OBJECT_GEN_PAIRS(unused0, unised1, idx, elem) \
+#define __YAS_OBJECT_GEN_PAIRS_IMPL(forstruct, sname, idx, elem) \
     YAS_PP_COMMA_IF(idx) \
-        ::yas::make_val(YAS_PP_STRINGIZE(elem), elem)
+        ::yas::make_val( \
+             YAS_PP_STRINGIZE(elem) \
+            ,YAS_PP_IF(forstruct, sname., /*empty*/) elem \
+        )
 
-#define __YAS_OBJECT_IMPL(seq) \
-	YAS_PP_SEQ_FOR_EACH_I( \
-		 __YAS_OBJECT_GEN_PAIRS \
-		,~ \
-		,seq \
-	)
+#define __YAS_OBJECT_GEN_PAIRS(unused0, data, idx, elem) \
+    __YAS_OBJECT_GEN_PAIRS_IMPL( \
+         YAS_PP_TUPLE_ELEM(0, data) \
+        ,YAS_PP_TUPLE_ELEM(1, data) \
+        ,idx \
+        ,elem \
+    )
+
+#define __YAS_OBJECT_IMPL(forstruct, sname, seq) \
+    YAS_PP_SEQ_FOR_EACH_I( \
+         __YAS_OBJECT_GEN_PAIRS \
+        ,(forstruct, sname) \
+        ,seq \
+    )
 
 #define __YAS_OBJECT_NONEMPTY_GEN_KVI_CB(unised0, unised1, idx, elem) \
     YAS_PP_COMMA_IF(idx) \
-        std::pair< \
-             std::integral_constant< \
-                  std::uint32_t \
-                 ,::yas::detail::fnv1a(YAS_PP_STRINGIZE(elem)) \
-             > \
-            ,std::integral_constant<std::uint8_t, idx> \
-        >
+    std::pair< \
+        std::integral_constant< \
+             std::uint32_t \
+            ,::yas::detail::fnv1a(YAS_PP_STRINGIZE(elem)) \
+        > \
+        ,std::integral_constant<std::uint8_t, idx> \
+    >
 
 #define __YAS_OBJECT_NONEMPTY_GEN_KVI(seq) \
     typename ::yas::detail::mergesort< \
@@ -400,49 +250,73 @@ make_object(std::nullptr_t, Pairs &&... pairs) {
         > \
     >::type
 
-#define __YAS_OBJECT_EMPTY(name, ...) \
-	::yas::make_object<std::tuple<>>(name)
+#define __YAS_OBJECT_EMPTY(forstruct, oname, sname, ...) \
+    ::yas::make_object<std::tuple<>>(oname)
 
-#define __YAS_OBJECT_NONEMPTY(name, seq) \
-	::yas::make_object< \
+#define __YAS_OBJECT_NONEMPTY(forstruct, oname, sname, seq) \
+    ::yas::make_object< \
         __YAS_OBJECT_NONEMPTY_GEN_KVI(seq) \
     >( \
-		 name \
-		,__YAS_OBJECT_IMPL(seq) \
-	)
+         oname \
+        ,__YAS_OBJECT_IMPL(forstruct, sname, seq) \
+    )
 
-#define YAS_OBJECT(name, ...) \
-	YAS_PP_IF( \
-		 __YAS_TUPLE_IS_EMPTY(__VA_ARGS__) \
-		,__YAS_OBJECT_EMPTY \
-		,__YAS_OBJECT_NONEMPTY \
-	)(name, YAS_PP_TUPLE_TO_SEQ((__VA_ARGS__)))
+#define __YAS_OBJECT_AUX(forstruct, oname, sname, ...) \
+    YAS_PP_IF( \
+         __YAS_PP_TUPLE_IS_EMPTY(__VA_ARGS__) \
+        ,__YAS_OBJECT_EMPTY \
+        ,__YAS_OBJECT_NONEMPTY \
+    )(forstruct, oname, sname, YAS_PP_TUPLE_TO_SEQ((__VA_ARGS__)))
+
+#define YAS_OBJECT(oname, ...) \
+    __YAS_OBJECT_AUX( \
+         0 \
+        ,oname \
+        ,~ \
+        ,__VA_ARGS__ \
+    )
+
+#define YAS_OBJECT_STRUCT(oname, sname, ...) \
+    __YAS_OBJECT_AUX( \
+         1 \
+        ,oname \
+        ,sname \
+        ,__VA_ARGS__ \
+    )
 
 /***************************************************************************/
 
-#define __YAS_OBJECT_NVP_GEN_PAIRS(unused0, unised1, idx, elem) \
+#define __YAS_OBJECT_NVP_GEN_PAIRS_IMPL(forstruct, sname, idx, elem) \
     YAS_PP_COMMA_IF(idx) \
-        ::yas::make_val( \
-             YAS_PP_TUPLE_ELEM(0, elem) \
-            ,YAS_PP_TUPLE_ELEM(1, elem) \
-        )
+    ::yas::make_val( \
+         YAS_PP_TUPLE_ELEM(0, elem) \
+        ,YAS_PP_IF(forstruct, sname., /*empty*/) YAS_PP_TUPLE_ELEM(1, elem) \
+    )
 
-#define __YAS_OBJECT_NVP_IMPL(seq) \
-	YAS_PP_SEQ_FOR_EACH_I( \
-		 __YAS_OBJECT_NVP_GEN_PAIRS \
-        ,~ \
-		,seq \
-	)
+#define __YAS_OBJECT_NVP_GEN_PAIRS(unused0, data, idx, elem) \
+    __YAS_OBJECT_NVP_GEN_PAIRS_IMPL( \
+         YAS_PP_TUPLE_ELEM(0, data) \
+        ,YAS_PP_TUPLE_ELEM(1, data) \
+        ,idx \
+        ,elem \
+    )
+
+#define __YAS_OBJECT_NVP_IMPL(forstruct, sname, seq) \
+    YAS_PP_SEQ_FOR_EACH_I( \
+         __YAS_OBJECT_NVP_GEN_PAIRS \
+        ,(forstruct, sname) \
+        ,seq \
+    )
 
 #define __YAS_OBJECT_NVP_NONEMPTY_GEN_KVI_CB(unised0, unised1, idx, elem) \
     YAS_PP_COMMA_IF(idx) \
-        std::pair< \
-             std::integral_constant< \
-                  std::uint32_t \
-                 ,::yas::detail::fnv1a(YAS_PP_TUPLE_ELEM(0, elem)) \
-             > \
-            ,std::integral_constant<std::uint8_t, idx> \
-        >
+    std::pair< \
+         std::integral_constant< \
+              std::uint32_t \
+             ,::yas::detail::fnv1a(YAS_PP_TUPLE_ELEM(0, elem)) \
+         > \
+        ,std::integral_constant<std::uint8_t, idx> \
+    >
 
 #define __YAS_OBJECT_NVP_NONEMPTY_GEN_KVI(seq) \
     typename ::yas::detail::mergesort< \
@@ -456,23 +330,98 @@ make_object(std::nullptr_t, Pairs &&... pairs) {
         > \
     >::type
 
-#define __YAS_OBJECT_NVP_EMPTY(name, ...) \
-	::yas::make_object<std::tuple<>>(name)
+#define __YAS_OBJECT_NVP_EMPTY(forstruct, oname, sname, ...) \
+    ::yas::make_object<std::tuple<>>(oname)
 
-#define __YAS_OBJECT_NVP_NONEMPTY(name, seq) \
-	::yas::make_object< \
+#define __YAS_OBJECT_NVP_NONEMPTY(forstruct, oname, sname, seq) \
+    ::yas::make_object< \
         __YAS_OBJECT_NVP_NONEMPTY_GEN_KVI(seq) \
     >( \
-		 name \
-		,__YAS_OBJECT_NVP_IMPL(seq) \
-	)
+         oname \
+        ,__YAS_OBJECT_NVP_IMPL(forstruct, sname, seq) \
+    )
 
-#define YAS_OBJECT_NVP(name, ...) \
-	YAS_PP_IF( \
-		 __YAS_TUPLE_IS_EMPTY(__VA_ARGS__) \
-		,__YAS_OBJECT_NVP_EMPTY \
-		,__YAS_OBJECT_NVP_NONEMPTY \
-	)(name, YAS_PP_TUPLE_TO_SEQ((__VA_ARGS__)))
+#define __YAS_OBJECT_NVP_AUX(forstruct, oname, sname, ...) \
+    YAS_PP_IF( \
+         __YAS_PP_TUPLE_IS_EMPTY(__VA_ARGS__) \
+        ,__YAS_OBJECT_NVP_EMPTY \
+        ,__YAS_OBJECT_NVP_NONEMPTY \
+    )(forstruct, oname, sname, YAS_PP_TUPLE_TO_SEQ((__VA_ARGS__)))
+
+
+#define YAS_OBJECT_NVP(oname, ...) \
+    __YAS_OBJECT_NVP_AUX( \
+         0 \
+        ,oname \
+        ,~ \
+        ,__VA_ARGS__ \
+    )
+
+#define YAS_OBJECT_STRUCT_NVP(oname, sname, ...) \
+    __YAS_OBJECT_NVP_AUX( \
+         1 \
+        ,oname \
+        ,sname \
+        ,__VA_ARGS__ \
+    )
+
+/***************************************************************************/
+
+#define __YAS_DEFINE_STRUCT_SERIALIZE_AUX(nvp, oname, ...) \
+    template<typename Archive> \
+    void serialize(Archive &ar) const { \
+        auto o = YAS_PP_IF(nvp, YAS_OBJECT_NVP, YAS_OBJECT) \
+        ( \
+             oname \
+            ,__VA_ARGS__ \
+        ); \
+        ar & o; \
+    } \
+    template<typename Archive> \
+    void serialize(Archive &ar) { \
+        auto o = YAS_PP_IF(nvp, YAS_OBJECT_NVP, YAS_OBJECT) \
+        ( \
+             oname \
+            ,__VA_ARGS__ \
+        ); \
+        ar & o; \
+    }
+
+#define YAS_DEFINE_STRUCT_SERIALIZE(oname, ...) \
+    __YAS_DEFINE_STRUCT_SERIALIZE_AUX(0, oname, __VA_ARGS__)
+
+#define YAS_DEFINE_STRUCT_SERIALIZE_NVP(oname, ...) \
+    __YAS_DEFINE_STRUCT_SERIALIZE_AUX(1, oname, __VA_ARGS__)
+
+/***************************************************************************/
+
+#define __YAS_DEFINE_INTRUSIVE_SERIALIZE_AUX(nvp, oname, tname, ...) \
+    template<typename Archive> \
+    void serialize(Archive &ar, const tname &t) { \
+        auto o = YAS_PP_IF(nvp, YAS_OBJECT_STRUCT_NVP, YAS_OBJECT_STRUCT) \
+        ( \
+             oname \
+            ,t \
+            ,__VA_ARGS__ \
+        ); \
+        ar & o; \
+    } \
+    template<typename Archive> \
+    void serialize(Archive &ar, tname &t) { \
+        auto o = YAS_PP_IF(nvp, YAS_OBJECT_STRUCT_NVP, YAS_OBJECT_STRUCT) \
+        ( \
+             oname \
+            ,t \
+            ,__VA_ARGS__ \
+        ); \
+        ar & o; \
+    }
+
+#define YAS_DEFINE_INTRUSIVE_SERIALIZE(oname, tname, ...) \
+    __YAS_DEFINE_INTRUSIVE_SERIALIZE_AUX(0, oname, tname, __VA_ARGS__)
+
+#define YAS_DEFINE_INTRUSIVE_SERIALIZE_NVP(oname, tname, ...) \
+    __YAS_DEFINE_INTRUSIVE_SERIALIZE_AUX(1, oname, tname, __VA_ARGS__)
 
 /***************************************************************************/
 

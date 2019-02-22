@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -40,22 +40,22 @@
 
 template<typename archive_traits>
 bool endian_test(std::ostream &log, const char *archive_type, const char *test_name) {
-	typename archive_traits::oarchive oa;
-	archive_traits::ocreate(oa, archive_type);
-	typename archive_traits::iarchive ia;
-	archive_traits::icreate(ia, oa, archive_type);
+    typename archive_traits::oarchive oa;
+    archive_traits::ocreate(oa, archive_type);
+    typename archive_traits::iarchive ia;
+    archive_traits::icreate(ia, oa, archive_type);
 
-	if ( ia->is_big_endian() != oa->is_big_endian() ) {
-		YAS_TEST_REPORT(log, archive_type, test_name);
-		return false;
-	}
+    if ( ia->is_big_endian() != oa->is_big_endian() ) {
+        YAS_TEST_REPORT(log, archive_type, test_name);
+        return false;
+    }
 
-	if ( ia->is_little_endian() != oa->is_little_endian() ) {
-		YAS_TEST_REPORT(log, archive_type, test_name);
-		return false;
-	}
+    if ( ia->is_little_endian() != oa->is_little_endian() ) {
+        YAS_TEST_REPORT(log, archive_type, test_name);
+        return false;
+    }
 
-	return true;
+    return true;
 }
 
 /***************************************************************************/

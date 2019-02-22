@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -44,6 +44,7 @@
 #include <yas/types/std/optional.hpp>
 #include <yas/types/std/complex.hpp>
 #include <yas/types/std/string.hpp>
+#include <yas/types/std/string_view.hpp>
 #include <yas/types/std/wstring.hpp>
 #include <yas/types/std/vector.hpp>
 #include <yas/types/std/list.hpp>
@@ -55,6 +56,7 @@
 #include <yas/types/std/multiset.hpp>
 #include <yas/types/std/array.hpp>
 #include <yas/types/std/tuple.hpp>
+#include <yas/types/std/variant.hpp>
 #include <yas/types/std/unordered_set.hpp>
 #include <yas/types/std/unordered_map.hpp>
 #include <yas/types/std/unordered_multiset.hpp>

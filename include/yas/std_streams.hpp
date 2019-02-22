@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -46,11 +46,11 @@ namespace yas {
 
 /***************************************************************************/
 
-struct std_ostream {
-    YAS_NONCOPYABLE(std_ostream)
-    YAS_MOVABLE(std_ostream)
+struct std_ostream_adapter {
+    YAS_NONCOPYABLE(std_ostream_adapter)
+    YAS_MOVABLE(std_ostream_adapter)
 
-    std_ostream(std::ostream &os)
+    std_ostream_adapter(std::ostream &os)
         :os(os)
     {}
 
@@ -70,11 +70,11 @@ private:
 
 /***************************************************************************/
 
-struct std_istream {
-    YAS_NONCOPYABLE(std_istream)
-    YAS_MOVABLE(std_istream)
+struct std_istream_adapter {
+    YAS_NONCOPYABLE(std_istream_adapter)
+    YAS_MOVABLE(std_istream_adapter)
 
-    std_istream(std::istream &is)
+    std_istream_adapter(std::istream &is)
         :is(is)
     {}
 

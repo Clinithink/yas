@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -33,9 +33,16 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+#ifdef _MSC_VER
+#   ifndef NOMINMAX
+#       define NOMINMAX
+#   endif
+#endif // _MSC_VER
+
 #include <yas/mem_streams.hpp>
 #include <yas/file_streams.hpp>
 #include <yas/std_streams.hpp>
+#include <yas/null_streams.hpp>
 #include <yas/binary_oarchive.hpp>
 #include <yas/binary_iarchive.hpp>
 #include <yas/text_oarchive.hpp>
@@ -58,14 +65,7 @@
 
 /***************************************************************************/
 
-#define YAS_TEST_REPORT(log, artype, testname) \
-    log << __FILE__ << "(" << __LINE__ << "): " << "archive: \"" << artype << "\", test: \"" << testname << "\" failed!" << std::endl;
-
-#define YAS_TEST_REPORT_IF(expr, log, artype, testname, ...) \
-    if ( (expr) ) { YAS_TEST_REPORT(log, artype, testname); __VA_ARGS__; }
-
-/***************************************************************************/
-
+#include "test.hpp"
 #include "include/array.hpp"
 #include "include/auto_array.hpp"
 #include "include/base64.hpp"
@@ -78,6 +78,7 @@
 #include "include/enum.hpp"
 #include "include/forward_list.hpp"
 #include "include/fundamental.hpp"
+#include "include/compacted_storage_size.hpp"
 #include "include/header.hpp"
 
 #if defined(YAS_SERIALIZE_BOOST_TYPES)
@@ -112,12 +113,14 @@
 #include "include/multimap.hpp"
 #include "include/multiset.hpp"
 #include "include/optional.hpp"
+#include "include/variant.hpp"
 #include "include/pair.hpp"
 #include "include/deque.hpp"
 #include "include/std_streams.hpp"
 #include "include/serialize.hpp"
 #include "include/set.hpp"
 #include "include/string.hpp"
+#include "include/string_view.hpp"
 #include "include/tuple.hpp"
 #include "include/unordered_map.hpp"
 #include "include/unordered_multimap.hpp"
@@ -168,16 +171,16 @@ struct archive_traits {
 
         template<typename Head, typename... Tail>
         oarchive_type& serialize(const Head &head, const Tail&... tail) {
-            oa->operator&(head).serialize(tail...);
-
-            return *oa;
+            return oa->operator&(head).serialize(tail...);
         }
 
         template<typename... Ts>
         oarchive_type& operator()(const Ts&... ts) {
-            oa->serialize(ts...);
-
-            return *oa;
+            return oa->serialize(ts...);
+        }
+        template<typename... Ts>
+        oarchive_type& save(const Ts&... ts) {
+            return oa->save(ts...);
         }
 
         static constexpr bool is_little_endian() { return oarchive_type::is_little_endian(); }
@@ -232,15 +235,16 @@ struct archive_traits {
 
         template<typename Head, typename... Tail>
         iarchive_type& serialize(Head &&head, Tail &&... tail) {
-            ia->operator&(head).serialize(tail...);
-
-            return *ia;
+            return ia->operator&(std::forward<Head>(head)).serialize(std::forward<Tail>(tail)...);
         }
 
         template<typename... Ts>
         iarchive_type& operator()(Ts &&... ts) {
-            return ia->serialize(ts...);
-            return *ia;
+            return ia->operator()(std::forward<Ts>(ts)...);
+        }
+        template<typename... Ts>
+        iarchive_type& load(Ts &&... ts) {
+            return ia->load(std::forward<Ts>(ts)...);
         }
 
         bool is_little_endian() { return ia->is_little_endian(); }
@@ -286,7 +290,7 @@ struct archive_traits {
 
 #define YAS_RUN_TEST_CHECK_FOR_SKIP(...) \
     YAS_PP_IF( \
-        __YAS_TUPLE_IS_EMPTY(__VA_ARGS__) \
+        __YAS_PP_TUPLE_IS_EMPTY(__VA_ARGS__) \
         ,YAS_RUN_TEST_RUN_TEST \
         ,YAS_RUN_TEST_SKIP_TEST \
     )(__VA_ARGS__)
@@ -314,6 +318,7 @@ void tests(std::ostream &log, int &p, int &e) {
     YAS_RUN_TEST(log, version, p, e);
     YAS_RUN_TEST(log, base64, p, e);
     YAS_RUN_TEST(log, fundamental, p, e);
+    YAS_RUN_TEST(log, compacted_storage_size, p, e);
     YAS_RUN_TEST(log, enum, p, e);
     YAS_RUN_TEST(log, auto_array, p, e);
     YAS_RUN_TEST(log, std_streams, p, e);
@@ -331,6 +336,7 @@ void tests(std::ostream &log, int &p, int &e) {
     YAS_RUN_TEST(log, chrono, p, e)
     YAS_RUN_TEST(log, complex, p, e);
     YAS_RUN_TEST(log, string, p, e);
+    YAS_RUN_TEST(log, string_view, p, e);
     YAS_RUN_TEST(log, wstring, p, e);
     YAS_RUN_TEST(log, pair, p, e);
     YAS_RUN_TEST(log, tuple, p, e);
@@ -347,6 +353,7 @@ void tests(std::ostream &log, int &p, int &e) {
     YAS_RUN_TEST(log, unordered_multimap, p, e);
     YAS_RUN_TEST(log, unordered_multiset, p, e);
     YAS_RUN_TEST(log, optional, p, e);
+    YAS_RUN_TEST(log, variant, p, e);
 #if defined(YAS_SERIALIZE_BOOST_TYPES)
     YAS_RUN_TEST(log, boost_fusion_pair, p, e);
     YAS_RUN_TEST(log, boost_fusion_tuple, p, e);
@@ -379,7 +386,7 @@ void tests(std::ostream &log, int &p, int &e) {
 /***************************************************************************/
 
 struct options {
-    options(char **argv)
+    explicit options(char **argv)
         :msg{}
         ,binary{false}
         ,text{false}
@@ -414,13 +421,8 @@ struct options {
         }
 
         int artype = binary+text+json;
-        if ( artype == 0 ) {
+        if ( artype == 0 || artype > 1 ) {
             msg = "one of binary/text/json should be specified. terminate.";
-
-            return;
-        }
-        if ( artype > 1 ) {
-            msg = "only one of binary/text/json can be specified. terminate.";
 
             return;
         }

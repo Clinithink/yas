@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -52,7 +52,7 @@ namespace detail {
 template<std::size_t F>
 struct serializer<
 	type_prop::not_a_fundamental,
-	ser_method::use_internal_serializer,
+	ser_case::use_internal_serializer,
 	F,
 	boost::container::string
 > {
@@ -60,7 +60,7 @@ struct serializer<
 	static Archive& save(Archive& ar, const boost::container::string& string) {
 		if ( F & yas::json ) {
 			ar.write("\"", 1);
-			save_string(ar, string);
+			save_string(ar, string.data(), string.length());
 			ar.write("\"", 1);
 		} else {
 			ar.write_seq_size(string.length());

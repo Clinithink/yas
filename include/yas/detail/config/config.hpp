@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -51,10 +51,20 @@
 /***************************************************************************/
 
 #if __cplusplus >= 201703L
-#define __YAS_CONSTEXPR_IF(...) if constexpr (__VA_ARGS__)
+#define __YAS_CONSTEXPR_IF(...) if constexpr ( static_cast<bool>(__VA_ARGS__) )
 #else
 #define __YAS_CONSTEXPR_IF(...) if (__VA_ARGS__)
 #endif
+
+/***************************************************************************/
+
+#ifndef YAS_OBJECT_MAX_MEMBERS
+#   define YAS_OBJECT_MAX_MEMBERS 20
+#endif // YAS_OBJECT_MAX_MEMBERS
+
+#ifndef YAS_VARIANT_MAX_VARIANTS
+#   define YAS_VARIANT_MAX_VARIANTS 20
+#endif // YAS_VARIANT_MAX_VARIANTS
 
 /***************************************************************************/
 

@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -99,6 +99,11 @@ struct binary_iarchive
 
 	template<typename... Args>
 	this_type& operator()(Args &&... args) {
+		return serialize(std::forward<Args>(args)...);
+	}
+
+	template<typename... Args>
+	this_type& load(Args &&... args) {
 		return serialize(std::forward<Args>(args)...);
 	}
 };

@@ -3,28 +3,35 @@ project(yas-base-test)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
-    include_directories("/home/nixman/boost-1.66.0-gcc-7.2/include")
     add_definitions(
         -DBOOST_ERROR_CODE_HEADER_ONLY
         -DBOOST_CHRONO_HEADER_ONLY
         -DYAS_SERIALIZE_BOOST_TYPES
+        -DYAS_OBJECT_MAX_MEMBERS=50
     )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
-#    include_directories("/home/nixman/boost-1.66.0-gcc-7.2/include")
     add_definitions(
         -DBOOST_ERROR_CODE_HEADER_ONLY
         -DBOOST_CHRONO_HEADER_ONLY
         -DYAS_SERIALIZE_BOOST_TYPES
+        -DYAS_OBJECT_MAX_MEMBERS=50
     )
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14")
-    include_directories("C:/Libraries/boost_1_63_0")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14 /d1parsePackExpressions- /bigobj")
+    include_directories("C:/Libraries/boost_1_66_0")
     add_definitions(
         -DBOOST_ERROR_CODE_HEADER_ONLY
         -DBOOST_CHRONO_HEADER_ONLY
+        -DYAS_SERIALIZE_BOOST_TYPES
+        -DYAS_OBJECT_MAX_MEMBERS=50
         -D_CRT_SECURE_NO_WARNINGS
     )
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        link_directories("C:/Libraries/boost_1_66_0/lib64-msvc-14.1")
+    elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+        link_directories("C:/Libraries/boost_1_66_0/lib32-msvc-14.1")
+    endif()
 endif()
 
 include_directories(
@@ -60,9 +67,9 @@ set(SOURCE_FILES
     include/boost_fusion_tuple.hpp
     include/boost_fusion_vector.hpp
     include/boost_tuple.hpp
-    include/boost_variant.hpp
     include/buffer.hpp
     include/chrono.hpp
+    include/compacted_storage_size.hpp
     include/complex.hpp
     include/deque.hpp
     include/endian.hpp
@@ -78,6 +85,7 @@ set(SOURCE_FILES
     include/one_func.hpp
     include/one_memfn.hpp
     include/optional.hpp
+    include/variant.hpp
     include/pair.hpp
     include/serialize.hpp
     include/serialization.hpp

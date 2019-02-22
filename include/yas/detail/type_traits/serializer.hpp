@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -45,7 +45,7 @@ namespace detail {
 
 template<
      type_prop
-    ,ser_method
+    ,ser_case
     ,std::size_t F
     ,typename T
 > struct serializer;

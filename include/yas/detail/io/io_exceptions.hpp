@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -57,6 +57,12 @@ __YAS_DECLARE_EXCEPTION_TYPE(io_exception);
 
 #define __YAS_THROW_ARCHIVE_NO_HEADER() \
 	__YAS_THROW_EXCEPTION(::yas::io_exception, "you cannot use information functions with \"yas::no_header\" flag");
+
+#define __YAS_THROW_READ_STORAGE_SIZE_ERROR(...) \
+	if ( !(__VA_ARGS__) ) { \
+	} else { \
+		__YAS_THROW_EXCEPTION(::yas::io_exception, "stored value is too big to read"); \
+	}
 
 #define __YAS_THROW_READ_ERROR(...) \
 	if ( !(__VA_ARGS__) ) { \

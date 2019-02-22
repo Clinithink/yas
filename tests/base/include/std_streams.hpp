@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -41,15 +41,15 @@
 template<typename archive_traits>
 bool std_streams_test(std::ostream &log, const char *archive_type, const char *test_name) {
     std::ostringstream os;
-    yas::std_ostream osadapter(os);
-    yas::binary_oarchive<yas::std_ostream> oa(osadapter);
+    yas::std_ostream_adapter osadapter(os);
+    yas::binary_oarchive<yas::std_ostream_adapter> oa(osadapter);
 
     std::uint32_t i=33, ii=0;
     oa & YAS_OBJECT_NVP("obj", ("i", i));
 
     std::istringstream is(os.str());
-    yas::std_istream isadapter(is);
-    yas::binary_iarchive<yas::std_istream> ia(isadapter);
+    yas::std_istream_adapter isadapter(is);
+    yas::binary_iarchive<yas::std_istream_adapter> ia(isadapter);
     ia & YAS_OBJECT_NVP("obj", ("i", ii));
 
     if ( i != ii ) {

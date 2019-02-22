@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -42,7 +42,6 @@
 #include <yas/text_iarchive.hpp>
 #include <yas/text_oarchive.hpp>
 #include <yas/mem_streams.hpp>
-#include <yas/tools/hexdumper.hpp>
 
 #include <boost/program_options.hpp>
 

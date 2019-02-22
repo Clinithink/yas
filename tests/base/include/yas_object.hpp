@@ -1,5 +1,5 @@
 
-// Copyright (c) 2010-2018 niXman (i dot nixman dog gmail dot com). All
+// Copyright (c) 2010-2019 niXman (i dot nixman dog gmail dot com). All
 // rights reserved.
 //
 // This file is part of YAS(https://github.com/niXman/yas) project.
@@ -36,130 +36,381 @@
 #ifndef __yas__tests__base__include__yas_object_hpp
 #define __yas__tests__base__include__yas_object_hpp
 
+#include <cstdint>
+#include <ostream>
+
+#include <yas/object.hpp>
+#include "../test.hpp"
+
 /***************************************************************************/
 
 namespace _yas_object_test {
 
 struct type {
-	int v;
+    int v;
 
-	type(int v)
-		:v(v)
-	{}
+    type(int v)
+        :v(v)
+    {}
 
-	template<typename Archive>
-	void serialize(Archive &ar) {
-		auto o = YAS_OBJECT("type0", v);
-		ar & o;
-	}
+    template<typename Archive>
+    void serialize(Archive &ar) {
+        auto o = YAS_OBJECT("type", v);
+        ar & o;
+    }
+};
+
+struct type2 {
+    int v0;
+    int v1;
+
+    type2(int v0, int v1)
+        :v0(v0)
+        ,v1(v1)
+    {}
+};
+
+struct type3 {
+    int v0;
+    int v1;
+
+    type3(int v0, int v1)
+        :v0(v0)
+        ,v1(v1)
+    {}
+
+    YAS_DEFINE_STRUCT_SERIALIZE("type3", v0, v1);
+};
+
+struct type4 {
+    int v0;
+    int v1;
+
+    type4(int v0, int v1)
+        :v0(v0)
+        ,v1(v1)
+    {}
+
+    YAS_DEFINE_STRUCT_SERIALIZE_NVP("type3", ("vv0", v0), ("vv1", v1));
+};
+
+struct type5 {
+    int v0;
+    int v1;
+
+    type5(int v0, int v1)
+        :v0(v0)
+        ,v1(v1)
+    {}
+};
+YAS_DEFINE_INTRUSIVE_SERIALIZE("type5", type5, v0, v1);
+
+struct type6 {
+    int v0;
+    int v1;
+
+    type6(int v0, int v1)
+        :v0(v0)
+        ,v1(v1)
+    {}
+};
+YAS_DEFINE_INTRUSIVE_SERIALIZE_NVP("type6", type6, ("vv0", v0), ("vv1", v1));
+
+struct bigtype {
+    int var1{ 0 };
+    unsigned int var2{ 0 };
+    std::string var3{};
+    std::string var4{};
+    unsigned char var5{ 0 };
+    unsigned int var6{ 0 };
+    unsigned int var7{ 0 };
+    unsigned int var8{ 0 };
+    unsigned int var9{ 0 };
+    unsigned int var10{ 0 };
+    unsigned short var11{ 0 };
+    unsigned short var12{ 0 };
+    unsigned short var13{ 0 };
+    unsigned short var14{ 0 };
+    float var15{ 0.f };
+    float var16{ 0.f };
+    float var17{ 0.f };
+    float var18{ 0.f };
+    int var19{ 0 };
+    int var21{ 0 };
+    int var22{ 0 };
+    unsigned char var23[1728];
+    unsigned char var24[50];
+    unsigned char var25[80];
+    unsigned char var26{ 0 };
+    unsigned char var27{ 0 };
+    unsigned char var28{ 0 };
+    unsigned char var29{ 0 };
+    unsigned char var30{ 0 };
+    unsigned int var31{ 0 };
+    unsigned int var32{ 0 };
+    unsigned int var33{ 0 };
+
+    YAS_DEFINE_STRUCT_SERIALIZE_NVP(
+        "bigtype"
+        ,("var1", var1)
+        ,("var2", var2)
+        ,("var3", var3)
+        ,("var4", var4)
+        ,("var5", var5)
+        ,("var6", var6)
+        ,("var7", var7)
+        ,("var8", var8)
+        ,("var9", var9)
+        ,("var10", var10)
+        ,("var11", var11)
+        ,("var12", var12)
+        ,("var13", var13)
+        ,("var14", var14)
+        ,("var15", var15)
+        ,("var16", var16)
+        ,("var17", var17)
+        ,("var18", var18)
+        ,("var19", var19)
+        ,("var21", var21)
+        ,("var22", var22)
+        ,("var23", var23)
+        ,("var24", var24)
+        ,("var25", var25)
+        ,("var26", var26)
+        ,("var27", var27)
+        ,("var28", var28)
+        ,("var29", var29)
+        ,("var30", var30)
+        ,("var31", var31)
+        ,("var32", var32)
+        ,("var33", var33)
+    );
 };
 
 } // ns _yas_object_test
 
+/***************************************************************************/
+
 template<typename archive_traits>
 bool yas_object_test(std::ostream &log, const char *archive_type, const char *test_name) {
-	{
-		int i0 = 3, i1 = 0;
+    {
+        int i0 = 3, i1 = 0;
 
-		typename archive_traits::oarchive oa;
-		archive_traits::ocreate(oa, archive_type);
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
 
-        auto o0 = YAS_OBJECT("object0", i0);
-		oa & o0;
+        auto o0 = YAS_OBJECT_NVP("object0", ("i0", i0));
+        oa & o0;
 
-		typename archive_traits::iarchive ia;
-		archive_traits::icreate(ia, oa, archive_type);
+        typename archive_traits::iarchive ia;
+        archive_traits::icreate(ia, oa, archive_type);
+
+        auto o1 = YAS_OBJECT_NVP("object0", ("i0", i1));
+        ia & o1;
+
+        if ( i0 != i1 ) {
+            YAS_TEST_REPORT(log, archive_type, test_name);
+            return false;
+        }
+    }
+    {
+        const int i0 = 4;
+        int i1 = 0;
+
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
+
+        auto o0 = YAS_OBJECT("object1", i0);
+        oa & o0;
+
+        typename archive_traits::iarchive ia;
+        archive_traits::icreate(ia, oa, archive_type);
 
         auto o1 = YAS_OBJECT_NVP("object1", ("i0", i1));
-		ia & o1;
+        ia & o1;
 
-		if ( i0 != i1 ) {
-			YAS_TEST_REPORT(log, archive_type, test_name);
-			return false;
-		}
-	}
-	{
-		const int i0 = 4;
-		int i1 = 0;
+        if ( i0 != i1 ) {
+            YAS_TEST_REPORT(log, archive_type, test_name);
+            return false;
+        }
+    }
+    {
+        int i0 = 3, i1 = 0;
 
-		typename archive_traits::oarchive oa;
-		archive_traits::ocreate(oa, archive_type);
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
+        oa & YAS_OBJECT("object2", i0);
 
-        auto o0 = YAS_OBJECT("object0", i0);
-		oa & o0;
+        typename archive_traits::iarchive ia;
+        archive_traits::icreate(ia, oa, archive_type);
+        ia & YAS_OBJECT_NVP("object2", ("i0", i1));
 
-		typename archive_traits::iarchive ia;
-		archive_traits::icreate(ia, oa, archive_type);
-
-        auto o1 = YAS_OBJECT_NVP("object1", ("i0", i1));
-		ia & o1;
-
-		if ( i0 != i1 ) {
-			YAS_TEST_REPORT(log, archive_type, test_name);
-			return false;
-		}
-	}
-	{
-		int i0 = 3, i1 = 0;
-
-		typename archive_traits::oarchive oa;
-		archive_traits::ocreate(oa, archive_type);
-		oa & YAS_OBJECT("object0", i0);
-
-		typename archive_traits::iarchive ia;
-		archive_traits::icreate(ia, oa, archive_type);
-		ia & YAS_OBJECT_NVP("object1", ("i0", i1));
-
-		if ( i0 != i1 ) {
-			YAS_TEST_REPORT(log, archive_type, test_name);
-			return false;
-		}
-	}
-	{
+        if ( i0 != i1 ) {
+            YAS_TEST_REPORT(log, archive_type, test_name);
+            return false;
+        }
+    }
+    {
         _yas_object_test::type t0(3), t1(0);
 
-		typename archive_traits::oarchive oa;
-		archive_traits::ocreate(oa, archive_type);
-		oa & t0;
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
+        oa & t0;
 
-		typename archive_traits::iarchive ia;
-		archive_traits::icreate(ia, oa, archive_type);
-		ia & t1;
+        typename archive_traits::iarchive ia;
+        archive_traits::icreate(ia, oa, archive_type);
+        ia & t1;
 
-		if ( t0.v != t1.v ) {
-			YAS_TEST_REPORT(log, archive_type, test_name);
-			return false;
-		}
-	}
-	{
-		typename archive_traits::oarchive oa;
-		archive_traits::ocreate(oa, archive_type);
+        if ( t0.v != t1.v ) {
+            YAS_TEST_REPORT(log, archive_type, test_name);
+            return false;
+        }
+    }
+    {
+        _yas_object_test::type2 t0(3, 4), t1(0, 0);
+
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
+        auto o0 = YAS_OBJECT_STRUCT("type2", t0, v0, v1);
+        oa & o0;
+
+        typename archive_traits::iarchive ia;
+        archive_traits::icreate(ia, oa, archive_type);
+        auto o1 = YAS_OBJECT_STRUCT("type2", t1, v0, v1);
+        ia & o1;
+
+        if ( t0.v0 != t1.v0 || t0.v1 != t1.v1 ) {
+            YAS_TEST_REPORT(log, archive_type, test_name);
+            return false;
+        }
+    }
+    {
+        _yas_object_test::type2 t0(3, 4), t1(0, 0);
+
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
+        auto o0 = YAS_OBJECT_STRUCT_NVP("type2", t0, ("v0", v0), ("v1", v1));
+        oa & o0;
+
+        typename archive_traits::iarchive ia;
+        archive_traits::icreate(ia, oa, archive_type);
+        auto o1 = YAS_OBJECT_STRUCT_NVP("type2", t1, ("v0", v0), ("v1", v1));
+        ia & o1;
+
+        if ( t0.v0 != t1.v0 || t0.v1 != t1.v1 ) {
+            YAS_TEST_REPORT(log, archive_type, test_name);
+            return false;
+        }
+    }
+    {
+        _yas_object_test::type3 t0(3, 4), t1(0, 0);
+
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
+        oa & t0;
+
+        typename archive_traits::iarchive ia;
+        archive_traits::icreate(ia, oa, archive_type);
+        ia & t1;
+
+        if ( t0.v0 != t1.v0 || t0.v1 != t1.v1 ) {
+            YAS_TEST_REPORT(log, archive_type, test_name);
+            return false;
+        }
+    }
+    {
+        _yas_object_test::type4 t0(3, 4), t1(0, 0);
+
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
+        oa & t0;
+
+        typename archive_traits::iarchive ia;
+        archive_traits::icreate(ia, oa, archive_type);
+        ia & t1;
+
+        if ( t0.v0 != t1.v0 || t0.v1 != t1.v1 ) {
+            YAS_TEST_REPORT(log, archive_type, test_name);
+            return false;
+        }
+    }
+    {
+        _yas_object_test::type5 t0(3, 4), t1(0, 0);
+
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
+        oa & t0;
+
+        typename archive_traits::iarchive ia;
+        archive_traits::icreate(ia, oa, archive_type);
+        ia & t1;
+
+        if ( t0.v0 != t1.v0 || t0.v1 != t1.v1 ) {
+            YAS_TEST_REPORT(log, archive_type, test_name);
+            return false;
+        }
+    }
+    {
+        _yas_object_test::type6 t0(3, 4), t1(0, 0);
+
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
+        oa & t0;
+
+        typename archive_traits::iarchive ia;
+        archive_traits::icreate(ia, oa, archive_type);
+        ia & t1;
+
+        if ( t0.v0 != t1.v0 || t0.v1 != t1.v1 ) {
+            YAS_TEST_REPORT(log, archive_type, test_name);
+            return false;
+        }
+    }
+    {
+        _yas_object_test::bigtype t0, t1;
+
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
+        oa & t0;
+
+        typename archive_traits::iarchive ia;
+        archive_traits::icreate(ia, oa, archive_type);
+        ia & t1;
+
+//        if ( t0.v0 != t1.v0 || t0.v1 != t1.v1 ) {
+//            YAS_TEST_REPORT(log, archive_type, test_name);
+//            return false;
+//        }
+    }
+    {
+        typename archive_traits::oarchive oa;
+        archive_traits::ocreate(oa, archive_type);
         auto o0 = YAS_OBJECT(nullptr);
-		oa & o0;
+        oa & o0;
 
         typename archive_traits::iarchive ia;
         archive_traits::icreate(ia, oa, archive_type);
         auto o1 = YAS_OBJECT(nullptr);
         ia & o1;
-	}
+    }
     {
         typename archive_traits::oarchive oa;
         archive_traits::ocreate(oa, archive_type);
         auto o0 = YAS_OBJECT_NVP(nullptr, ("a", 0), ("b", 1));
         oa & o0;
 
-        int a=0, b=0;
+        int a = 0, b = 0;
 
-        bool ok = false;
+        bool ex = false;
         try {
             typename archive_traits::iarchive ia;
             archive_traits::icreate(ia, oa, archive_type);
             auto o1 = YAS_OBJECT(nullptr, a, b);
             ia & o1;
         } catch (const yas::serialization_exception &) {
-            ok = true;
+            ex = true;
         }
-        if ( ok ) {
+        if ( ex ) {
             YAS_TEST_REPORT(log, archive_type, test_name);
             return false;
         }
@@ -170,24 +421,24 @@ bool yas_object_test(std::ostream &log, const char *archive_type, const char *te
     }
     {
         if ( archive_traits::iarchive_type::flags() & yas::json ) {
-            if ( !(archive_traits::iarchive_type::flags() & yas::compacted) ) {
+            if ( !(archive_traits::iarchive_type::flags() & yas::compacted)) {
                 typename archive_traits::oarchive oa;
                 archive_traits::ocreate(oa, archive_type);
                 auto o0 = YAS_OBJECT_NVP(nullptr, ("b", 1), ("c", 2), ("a", 0));
                 oa & o0;
 
-                int a=0, b=0;
+                int a = 0, b = 0;
 
-                bool ok = false;
+                bool ex = false;
                 try {
                     typename archive_traits::iarchive ia;
                     archive_traits::icreate(ia, oa, archive_type);
                     auto o1 = YAS_OBJECT(nullptr, b, a);
                     ia & o1;
                 } catch (const yas::serialization_exception &) {
-                    ok = true;
+                    ex = true;
                 }
-                if ( ok == true ) {
+                if ( ex ) {
                     YAS_TEST_REPORT(log, archive_type, test_name);
                     return false;
                 }
@@ -200,24 +451,24 @@ bool yas_object_test(std::ostream &log, const char *archive_type, const char *te
     }
     {
         if ( archive_traits::iarchive_type::flags() & yas::json ) {
-            if ( !(archive_traits::iarchive_type::flags() & yas::compacted) ) {
+            if ( !(archive_traits::iarchive_type::flags() & yas::compacted)) {
                 typename archive_traits::oarchive oa;
                 archive_traits::ocreate(oa, archive_type);
                 auto o0 = YAS_OBJECT_NVP(nullptr, ("b", 1), ("c", 2), ("a", 0));
                 oa & o0;
 
-                int c=0;
+                int c = 0;
 
-                bool ok = false;
+                bool ex = false;
                 try {
                     typename archive_traits::iarchive ia;
                     archive_traits::icreate(ia, oa, archive_type);
                     auto o1 = YAS_OBJECT(nullptr, c);
                     ia & o1;
                 } catch (const yas::serialization_exception &) {
-                    ok = true;
+                    ex = true;
                 }
-                if ( ok == true ) {
+                if ( ex ) {
                     YAS_TEST_REPORT(log, archive_type, test_name);
                     return false;
                 }
@@ -229,7 +480,7 @@ bool yas_object_test(std::ostream &log, const char *archive_type, const char *te
         }
     }
 
-	return true;
+    return true;
 }
 
 /***************************************************************************/
